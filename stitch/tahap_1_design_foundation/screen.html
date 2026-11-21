@@ -1,0 +1,914 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KaryaHR Mobile â€” Design Foundation (Tahap 1)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d', // Primary
+              800: '#166534',
+              900: '#14532d',
+            },
+            neutral: {
+              canvas: '#f8fafc',
+              surface: '#ffffff',
+              border: '#e2e8f0',
+              'border-subtle': '#cbd5e1',
+              'text-primary': '#0f172a',
+              'text-secondary': '#64748b',
+              'text-muted': '#94a3b8',
+            },
+            status: {
+              success: '#15803d',
+              'success-bg': '#f0fdf4',
+              'success-border': '#bbf7d0',
+              warning: '#b45309',
+              'warning-bg': '#fffbeb',
+              'warning-border': '#fde68a',
+              danger: '#b91c1c',
+              'danger-bg': '#fef2f2',
+              'danger-border': '#fecaca',
+              info: '#0369a1',
+              'info-bg': '#f0f9ff',
+              'info-border': '#bae6fd',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Strict Anti AI-slop: zero decorative blur, no unnecessary shadows, no gradients */
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .code-badge {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+  </style>
+</head>
+<body class="p-6 md:p-12 max-w-7xl mx-auto space-y-12">
+
+  <!-- Header Header Foundation -->
+  <header class="border-b border-neutral-border pb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-brand-100 text-brand-800 border border-brand-200">
+            TAHAP 1: DESIGN FOUNDATION
+          </span>
+          <span class="text-xs text-neutral-text-secondary">Target: Flutter Mobile Native (Android & iOS)</span>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight text-neutral-text-primary">KaryaHR Mobile Design System</h1>
+        <p class="text-sm text-neutral-text-secondary mt-1 max-w-3xl">
+          Fondasi antarmuka HRIS mobile untuk bisnis dan UMKM di Indonesia. Mengutamakan fungsionalitas, zero AI-slop (tanpa gradient, tanpa neumorphism, tanpa shadow berlebihan), dan 100% realistis diimplementasikan menggunakan widget standar Flutter.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <p class="text-xs font-medium text-neutral-text-secondary">Primary Token</p>
+          <p class="text-sm font-semibold font-mono text-brand-700">#15803D (Green 700)</p>
+        </div>
+        <div class="w-10 h-10 rounded-md bg-brand-700 border border-brand-800 flex items-center justify-center text-white text-xs font-bold shadow-none">
+          KHR
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 1. COLOR SYSTEM -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        1. Color Palette System
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Palet fungsional berorientasi profesional, bebas saturasi berlebihan, kontras WCAG AA compliant.</p>
+    </div>
+
+    <!-- Color Swatches Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Primary Brand -->
+      <div class="bg-white border border-neutral-border rounded-lg p-4 space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Primary Brand (Hijau Profesional)</p>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between p-2 rounded bg-brand-700 text-white text-xs">
+            <span class="font-medium">Primary Active</span>
+            <span class="font-mono">#15803D</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-brand-800 text-white text-xs">
+            <span class="font-medium">Primary Dark / Pressed</span>
+            <span class="font-mono">#166534</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-brand-100 text-brand-900 border border-brand-200 text-xs">
+            <span class="font-medium">Primary Light (Tint)</span>
+            <span class="font-mono">#DCFCE7</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-brand-50 text-brand-800 border border-brand-100 text-xs">
+            <span class="font-medium">Primary Background Tint</span>
+            <span class="font-mono">#F0FDF4</span>
+          </div>
+        </div>
+        <p class="text-[11px] text-neutral-text-secondary">Digunakan pada App Bar, Primary CTA, indikator aktif, dan status selected.</p>
+      </div>
+
+      <!-- Neutral & Surfaces -->
+      <div class="bg-white border border-neutral-border rounded-lg p-4 space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Neutral & Canvas</p>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between p-2 rounded bg-neutral-canvas border border-neutral-border text-xs">
+            <span class="font-medium text-neutral-text-primary">Scaffold Canvas</span>
+            <span class="font-mono text-neutral-text-secondary">#F8FAFC</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-white border border-neutral-border text-xs">
+            <span class="font-medium text-neutral-text-primary">Card / Surface</span>
+            <span class="font-mono text-neutral-text-secondary">#FFFFFF</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-slate-900 text-white text-xs">
+            <span class="font-medium">Text Primary</span>
+            <span class="font-mono">#0F172A</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-slate-500 text-white text-xs">
+            <span class="font-medium">Text Secondary</span>
+            <span class="font-mono">#64748B</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-slate-100 text-slate-600 border border-slate-200 text-xs">
+            <span class="font-medium">Border Subtle</span>
+            <span class="font-mono">#E2E8F0</span>
+          </div>
+        </div>
+        <p class="text-[11px] text-neutral-text-secondary">Struktur layout, divider, border input, serta kontras tipografi baca.</p>
+      </div>
+
+      <!-- Semantic / Statuses -->
+      <div class="bg-white border border-neutral-border rounded-lg p-4 space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Semantic Status (API State Mapping)</p>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between p-2 rounded bg-status-success-bg border border-status-success-border text-status-success text-xs">
+            <span class="font-medium">APPROVED / PAID / PRESENT</span>
+            <span class="font-mono font-semibold">#15803D</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-status-warning-bg border border-status-warning-border text-status-warning text-xs">
+            <span class="font-medium">PENDING / LATE / DRAFT</span>
+            <span class="font-mono font-semibold">#B45309</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-status-danger-bg border border-status-danger-border text-status-danger text-xs">
+            <span class="font-medium">REJECTED / ABSENT / CANCELLED</span>
+            <span class="font-mono font-semibold">#B91C1C</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded bg-status-info-bg border border-status-info-border text-status-info text-xs">
+            <span class="font-medium">FINALIZED / INFO / PERMIT</span>
+            <span class="font-mono font-semibold">#0369A1</span>
+          </div>
+        </div>
+        <p class="text-[11px] text-neutral-text-secondary">Status fungsional tanpa ambiguitas; langsung memetakan enum dari API Contract.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 2. TYPOGRAPHY SYSTEM -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        2. Typography Scale (Mobile-First Flutter TextTheme)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Font: Plus Jakarta Sans / System Sans-Serif. Proporsional untuk layar smartphone tanpa heading raksasa.</p>
+    </div>
+
+    <div class="bg-white border border-neutral-border rounded-lg overflow-hidden">
+      <table class="w-full text-left border-collapse text-xs md:text-sm">
+        <thead>
+          <tr class="bg-neutral-canvas border-b border-neutral-border text-neutral-text-secondary text-xs uppercase">
+            <th class="py-3 px-4 font-semibold">Token / Style</th>
+            <th class="py-3 px-4 font-semibold">Spesifikasi (Size / Line Height / Weight)</th>
+            <th class="py-3 px-4 font-semibold">Flutter Equivalent</th>
+            <th class="py-3 px-4 font-semibold">Contoh Tampilan</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-neutral-border">
+          <tr>
+            <td class="py-3 px-4 font-medium text-neutral-text-primary">Headline / Screen Title</td>
+            <td class="py-3 px-4 text-neutral-text-secondary font-mono">20px / 28px / SemiBold (600)</td>
+            <td class="py-3 px-4 font-mono text-xs text-brand-800">titleLarge</td>
+            <td class="py-3 px-4 text-xl font-semibold text-neutral-text-primary">Daftar Karyawan</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-4 font-medium text-neutral-text-primary">Section Header / Dialog Title</td>
+            <td class="py-3 px-4 text-neutral-text-secondary font-mono">16px / 24px / SemiBold (600)</td>
+            <td class="py-3 px-4 font-mono text-xs text-brand-800">titleMedium</td>
+            <td class="py-3 px-4 text-base font-semibold text-neutral-text-primary">Rincian Slip Gaji Periode Jan 2025</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-4 font-medium text-neutral-text-primary">Body Regular</td>
+            <td class="py-3 px-4 text-neutral-text-secondary font-mono">14px / 20px / Regular (400)</td>
+            <td class="py-3 px-4 font-mono text-xs text-brand-800">bodyMedium</td>
+            <td class="py-3 px-4 text-sm text-neutral-text-primary">Presensi masuk telah berhasil direkam pada 08:02 WIB.</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-4 font-medium text-neutral-text-primary">Body Medium (Label / Value)</td>
+            <td class="py-3 px-4 text-neutral-text-secondary font-mono">14px / 20px / Medium (500)</td>
+            <td class="py-3 px-4 font-mono text-xs text-brand-800">bodyMedium.semi</td>
+            <td class="py-3 px-4 text-sm font-medium text-neutral-text-primary">Rp 4.500.000 (Gaji Pokok)</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-4 font-medium text-neutral-text-primary">Caption & Helper Text</td>
+            <td class="py-3 px-4 text-neutral-text-secondary font-mono">12px / 16px / Regular (400)</td>
+            <td class="py-3 px-4 font-mono text-xs text-brand-800">bodySmall</td>
+            <td class="py-3 px-4 text-xs text-neutral-text-secondary">Toleransi keterlambatan maksimal 15 menit.</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-4 font-medium text-neutral-text-primary">Badge & Metadata Label</td>
+            <td class="py-3 px-4 text-neutral-text-secondary font-mono">11px / 14px / SemiBold (600)</td>
+            <td class="py-3 px-4 font-mono text-xs text-brand-800">labelSmall</td>
+            <td class="py-3 px-4">
+              <span class="inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-brand-100 text-brand-800 border border-brand-200 uppercase">
+                SHIFT PAGI
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 3. SPACING & RADIUS SYSTEM -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        3. Spacing, Padding & Border Radius (Grid 4px & 8px)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Rasio ritme spasi konsisten untuk tata letak mobile; radius presisi 6px - 8px tanpa rounded pill ekstrem.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Spacing Scale -->
+      <div class="bg-white border border-neutral-border rounded-lg p-4 space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Spacing Scale (4pt Grid)</p>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between border-b border-neutral-border/60 pb-1.5">
+            <span class="font-mono text-neutral-text-primary">Space 4 (4px)</span>
+            <span class="text-neutral-text-secondary">Gap antar-ikon dan text helper</span>
+            <div class="w-1 bg-brand-700 h-3 rounded-none"></div>
+          </div>
+          <div class="flex items-center justify-between border-b border-neutral-border/60 pb-1.5">
+            <span class="font-mono text-neutral-text-primary">Space 8 (8px)</span>
+            <span class="text-neutral-text-secondary">Margin elemen dalam kartu / list item spacing</span>
+            <div class="w-2 bg-brand-700 h-3 rounded-none"></div>
+          </div>
+          <div class="flex items-center justify-between border-b border-neutral-border/60 pb-1.5">
+            <span class="font-mono text-neutral-text-primary">Space 12 (12px)</span>
+            <span class="text-neutral-text-secondary">Inner padding input field & tombol sekunder</span>
+            <div class="w-3 bg-brand-700 h-3 rounded-none"></div>
+          </div>
+          <div class="flex items-center justify-between border-b border-neutral-border/60 pb-1.5">
+            <span class="font-mono text-neutral-text-primary">Space 16 (16px)</span>
+            <span class="text-neutral-text-secondary"><strong>Standar padding horizontal layar mobile</strong></span>
+            <div class="w-4 bg-brand-700 h-3 rounded-none"></div>
+          </div>
+          <div class="flex items-center justify-between border-b border-neutral-border/60 pb-1.5">
+            <span class="font-mono text-neutral-text-primary">Space 20 (20px)</span>
+            <span class="text-neutral-text-secondary">Gap antar-section form input</span>
+            <div class="w-5 bg-brand-700 h-3 rounded-none"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-neutral-text-primary">Space 24 (24px)</span>
+            <span class="text-neutral-text-secondary">Vertical margin antar modul utama</span>
+            <div class="w-6 bg-brand-700 h-3 rounded-none"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Radius & Border Tokens -->
+      <div class="bg-white border border-neutral-border rounded-lg p-4 space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Border Radius & Stroke Tokens</p>
+        <div class="space-y-3 text-xs">
+          <div class="p-3 border border-neutral-border rounded flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-neutral-text-primary">Radius Small: 4px</p>
+              <p class="text-neutral-text-secondary text-[11px]">Badge status, chip filter, checkbox, tooltip</p>
+            </div>
+            <div class="w-10 h-7 border border-brand-700 bg-brand-50 rounded flex items-center justify-center text-[10px] font-mono text-brand-800">4px</div>
+          </div>
+          <div class="p-3 border border-neutral-border rounded-md flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-neutral-text-primary">Radius Medium (Default): 6px - 8px</p>
+              <p class="text-neutral-text-secondary text-[11px]">Text field input, button, dropdown, container kartu</p>
+            </div>
+            <div class="w-10 h-7 border border-brand-700 bg-brand-50 rounded-md flex items-center justify-center text-[10px] font-mono text-brand-800">8px</div>
+          </div>
+          <div class="p-3 border border-neutral-border rounded-lg flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-neutral-text-primary">Radius Large: 12px</p>
+              <p class="text-neutral-text-secondary text-[11px]">Modal bottom sheet & confirmation dialogs</p>
+            </div>
+            <div class="w-10 h-7 border border-brand-700 bg-brand-50 rounded-lg flex items-center justify-center text-[10px] font-mono text-brand-800">12px</div>
+          </div>
+          <div class="p-2.5 bg-neutral-canvas border border-neutral-border rounded text-[11px] text-neutral-text-secondary">
+            <strong>Aturan Strict Anti-Slop:</strong> Tidak ada radius melengkung ekstrem (pill 9999px) pada container konten. Border stroke standar: 1px solid <span class="font-mono text-neutral-text-primary">#E2E8F0</span>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. BUTTON COMPONENTS -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        4. Button Components (Flutter ElevatedButton / OutlinedButton)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Tinggi touch target minimal 44px - 48px sesuai standar aksesibilitas smartphone.</p>
+    </div>
+
+    <div class="bg-white border border-neutral-border rounded-lg p-6 space-y-6">
+      
+      <!-- Primary, Secondary, Destructive, Outline -->
+      <div>
+        <p class="text-xs font-semibold text-neutral-text-secondary uppercase mb-3">Tipe & Varian Tombol</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Primary -->
+          <div class="space-y-2">
+            <button class="w-full h-11 px-4 rounded-md bg-brand-700 hover:bg-brand-800 text-white font-medium text-sm transition-colors flex items-center justify-center gap-2">
+              <span>Simpan Perubahan</span>
+            </button>
+            <p class="text-[11px] text-neutral-text-secondary text-center">Primary Action (Filled)</p>
+          </div>
+
+          <!-- Secondary / Neutral Outlined -->
+          <div class="space-y-2">
+            <button class="w-full h-11 px-4 rounded-md bg-white border border-neutral-border hover:bg-neutral-canvas text-neutral-text-primary font-medium text-sm transition-colors flex items-center justify-center gap-2">
+              <span>Batal</span>
+            </button>
+            <p class="text-[11px] text-neutral-text-secondary text-center">Secondary / Dismiss</p>
+          </div>
+
+          <!-- Destructive -->
+          <div class="space-y-2">
+            <button class="w-full h-11 px-4 rounded-md bg-status-danger text-white font-medium text-sm hover:bg-red-800 transition-colors flex items-center justify-center gap-2">
+              <span>Nonaktifkan Karyawan</span>
+            </button>
+            <p class="text-[11px] text-neutral-text-secondary text-center">Destructive Action</p>
+          </div>
+
+          <!-- Destructive Outlined -->
+          <div class="space-y-2">
+            <button class="w-full h-11 px-4 rounded-md bg-white border border-status-danger text-status-danger font-medium text-sm hover:bg-status-danger-bg transition-colors flex items-center justify-center gap-2">
+              <span>Batalkan Pengajuan</span>
+            </button>
+            <p class="text-[11px] text-neutral-text-secondary text-center">Destructive Outlined</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- State: Disabled, Loading, With Icon -->
+      <div class="border-t border-neutral-border pt-4">
+        <p class="text-xs font-semibold text-neutral-text-secondary uppercase mb-3">State Interaktif (Disabled, Loading, Icon)</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          
+          <!-- Disabled -->
+          <div class="space-y-1.5">
+            <button disabled class="w-full h-11 px-4 rounded-md bg-slate-100 border border-slate-200 text-slate-400 font-medium text-sm cursor-not-allowed flex items-center justify-center">
+              <span>Check-in Selesai</span>
+            </button>
+            <p class="text-[11px] text-neutral-text-secondary">Disabled State</p>
+          </div>
+
+          <!-- Loading -->
+          <div class="space-y-1.5">
+            <button class="w-full h-11 px-4 rounded-md bg-brand-700 text-white font-medium text-sm flex items-center justify-center gap-2 cursor-wait">
+              <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Memproses...</span>
+            </button>
+            <p class="text-[11px] text-neutral-text-secondary">Loading State</p>
+          </div>
+
+          <!-- With Icon -->
+          <div class="space-y-1.5">
+            <button class="w-full h-11 px-4 rounded-md bg-brand-700 text-white font-medium text-sm flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+              <span>Tambah Shift Baru</span>
+            </button>
+            <p class="text-[11px] text-neutral-text-secondary">Leading Icon Action</p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. TEXT FIELD & DROPDOWN COMPONENTS -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        5. Form Fields: Text Field & Dropdown (Flutter InputDecoration)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Label eksplisit di atas input, border jelas, error handling kontekstual tanpa layout shift.</p>
+    </div>
+
+    <div class="bg-white border border-neutral-border rounded-lg p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Default Input -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-neutral-text-primary">
+            Email Karyawan <span class="text-status-danger">*</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="email" 
+              placeholder="nama@perusahaan.com" 
+              value="budi.santoso@karya.id"
+              class="w-full h-11 px-3 bg-white border border-neutral-border rounded-md text-sm text-neutral-text-primary focus:outline-none focus:border-brand-700 focus:ring-1 focus:ring-brand-700"
+            />
+          </div>
+          <p class="text-[11px] text-neutral-text-secondary">Digunakan sebagai kredensial login akun.</p>
+        </div>
+
+        <!-- Focused / Active Input -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-neutral-text-primary">
+            Nomor Telepon
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              value="081298765432"
+              class="w-full h-11 px-3 bg-white border-2 border-brand-700 rounded-md text-sm text-neutral-text-primary outline-none"
+            />
+          </div>
+          <p class="text-[11px] text-brand-700 font-medium">State: Focused</p>
+        </div>
+
+        <!-- Error State Input -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-neutral-text-primary">
+            Kata Sandi Baru <span class="text-status-danger">*</span>
+          </label>
+          <div class="relative">
+            <input 
+              type="password" 
+              value="12345"
+              class="w-full h-11 px-3 bg-white border border-status-danger rounded-md text-sm text-neutral-text-primary outline-none"
+            />
+          </div>
+          <p class="text-[11px] text-status-danger font-medium flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Minimal 8 karakter sesuai aturan keamanan.
+          </p>
+        </div>
+
+        <!-- Dropdown Component (Standard) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-neutral-text-primary">
+            Role Akun <span class="text-status-danger">*</span>
+          </label>
+          <div class="relative">
+            <select class="w-full h-11 px-3 bg-white border border-neutral-border rounded-md text-sm text-neutral-text-primary appearance-none pr-8 focus:outline-none focus:border-brand-700">
+              <option value="EMPLOYEE">EMPLOYEE (Karyawan)</option>
+              <option value="ADMIN">ADMIN (Personalia)</option>
+              <option value="OWNER">OWNER (Pemilik Usaha)</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-neutral-text-secondary">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+          <p class="text-[11px] text-neutral-text-secondary">Menentukan hak akses fitur pada aplikasi.</p>
+        </div>
+
+        <!-- Dropdown Component (Jenis Cuti) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-neutral-text-primary">
+            Jenis Pengajuan <span class="text-status-danger">*</span>
+          </label>
+          <div class="relative">
+            <select class="w-full h-11 px-3 bg-white border border-neutral-border rounded-md text-sm text-neutral-text-primary appearance-none pr-8 focus:outline-none focus:border-brand-700">
+              <option value="ANNUAL">Cuti Tahunan (Saldo: 10 Hari)</option>
+              <option value="SICK">Izin Sakit</option>
+              <option value="SPECIAL">Izin Khusus</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-neutral-text-secondary">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+          <p class="text-[11px] text-neutral-text-secondary">Saldo akan berkurang otomatis setelah persetujuan.</p>
+        </div>
+
+        <!-- Disabled Field -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-neutral-text-secondary">
+            ID Karyawan (Server Generated)
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              value="EMP-2025-0014" 
+              disabled
+              class="w-full h-11 px-3 bg-slate-100 border border-slate-200 rounded-md text-sm text-slate-500 cursor-not-allowed"
+            />
+          </div>
+          <p class="text-[11px] text-neutral-text-muted">Field otomatis dibuat oleh sistem API.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. STATUS INDICATORS / BADGES -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        6. Status Indicator & Badges (API Contract Enums)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Memetakan secara eksak status dari API: Leave, Attendance, Payroll, dan Cash Advance.</p>
+    </div>
+
+    <div class="bg-white border border-neutral-border rounded-lg p-6 space-y-4">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        
+        <!-- PENDING -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+            PENDING
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Pengajuan Cuti / Lembur / Kasbon</p>
+        </div>
+
+        <!-- APPROVED -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-green-50 text-green-800 border border-green-200">
+            APPROVED
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Disetujui oleh Owner / Admin</p>
+        </div>
+
+        <!-- REJECTED -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-800 border border-red-200">
+            REJECTED
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Ditolak dengan alasan terlampir</p>
+        </div>
+
+        <!-- CANCELLED -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+            CANCELLED
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Dibatalkan oleh pemohon</p>
+        </div>
+
+        <!-- PRESENT (Presensi) -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            HADIR TEPAT WAKTU
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Check-in sebelum batas toleransi</p>
+        </div>
+
+        <!-- LATE -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+            TERLAMBAT (12M)
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Melewati batas waktu shift</p>
+        </div>
+
+        <!-- DRAFT / FINALIZED (Payroll) -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">
+            FINALIZED
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Periode payroll terkunci</p>
+        </div>
+
+        <!-- PAID (Payroll) -->
+        <div class="p-3 bg-neutral-canvas border border-neutral-border rounded-md space-y-1.5">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-brand-50 text-brand-800 border border-brand-200">
+            PAID (TERBAYAR)
+          </span>
+          <p class="text-[11px] text-neutral-text-secondary">Slip gaji telah diselesaikan</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. LIST ITEM COMPONENTS -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        7. List Item Components (Flutter ListTile / Flat Container)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Ringkas, mudah dipindai (scannable), touch feedback jelas, tanpa card-in-card berlebihan.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Employee List Item -->
+      <div class="bg-white border border-neutral-border rounded-lg p-4 space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Karyawan (Employee Management)</p>
+        
+        <div class="divide-y divide-neutral-border border border-neutral-border rounded-md">
+          <!-- Item 1 -->
+          <div class="p-3 flex items-center justify-between hover:bg-neutral-canvas transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded bg-brand-50 border border-brand-200 text-brand-800 font-bold text-xs flex items-center justify-center">
+                BS
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-neutral-text-primary">Budi Santoso</p>
+                <p class="text-xs text-neutral-text-secondary">Staff Operasional â€¢ Shifting</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
+                AKTIF
+              </span>
+              <svg class="w-4 h-4 text-neutral-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="p-3 flex items-center justify-between hover:bg-neutral-canvas transition-colors">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded bg-slate-100 border border-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center">
+                SR
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-neutral-text-primary">Siti Rahmawati</p>
+                <p class="text-xs text-neutral-text-secondary">Kasir / Front-liner</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                NONAKTIF
+              </span>
+              <svg class="w-4 h-4 text-neutral-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leave / Attendance List Item -->
+      <div class="bg-white border border-neutral-border rounded-lg p-4 space-y-3">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Pengajuan Cuti / Izin</p>
+
+        <div class="divide-y divide-neutral-border border border-neutral-border rounded-md">
+          <!-- Item 1 -->
+          <div class="p-3 space-y-1.5 hover:bg-neutral-canvas transition-colors">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-neutral-text-primary">Cuti Tahunan (2 Hari)</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                PENDING
+              </span>
+            </div>
+            <p class="text-xs text-neutral-text-secondary">24 Feb 2025 - 25 Feb 2025 â€¢ Urusan Keluarga</p>
+            <div class="flex items-center justify-between pt-1 text-[11px] text-neutral-text-muted">
+              <span>Diajukan: 20 Feb 2025</span>
+              <span class="text-brand-700 font-medium hover:underline cursor-pointer">Lihat Detail &rarr;</span>
+            </div>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="p-3 space-y-1.5 hover:bg-neutral-canvas transition-colors">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-neutral-text-primary">Izin Sakit (1 Hari)</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-green-50 text-green-800 border border-green-200">
+                APPROVED
+              </span>
+            </div>
+            <p class="text-xs text-neutral-text-secondary">10 Feb 2025 â€¢ Surat Dokter Terlampir</p>
+            <div class="flex items-center justify-between pt-1 text-[11px] text-neutral-text-muted">
+              <span>Disetujui oleh: Admin Personalia</span>
+              <span class="text-brand-700 font-medium hover:underline cursor-pointer">Lihat Detail &rarr;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 8. DIALOG & BOTTOM SHEET COMPONENTS -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        8. Dialog & Modal Sheet (Flutter AlertDialog & BottomSheet)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Konfirmasi tindakan penting (Approval, Reject, Nonaktifkan) dengan pesan jelas dan tombol aksi tegas.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Confirmation Alert Dialog -->
+      <div class="bg-neutral-canvas border border-neutral-border rounded-lg p-4 space-y-2">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Konfirmasi Tindakan Penting (AlertDialog)</p>
+        
+        <div class="bg-white border border-neutral-border rounded-lg p-5 max-w-sm mx-auto shadow-sm space-y-4">
+          <div class="space-y-1">
+            <h3 class="text-base font-semibold text-neutral-text-primary">Tolak Pengajuan Cuti?</h3>
+            <p class="text-xs text-neutral-text-secondary">
+              Tindakan ini tidak dapat dibatalkan. Berikan alasan penolakan untuk karyawan bersangkutan.
+            </p>
+          </div>
+          <div>
+            <textarea 
+              rows="2" 
+              placeholder="Tulis alasan penolakan..." 
+              class="w-full p-2.5 text-xs border border-neutral-border rounded-md focus:border-brand-700 outline-none"
+            >Kebutuhan operasional shift pagi masih padat.</textarea>
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button class="px-3.5 h-9 rounded-md border border-neutral-border bg-white text-xs font-medium text-neutral-text-primary">
+              Batal
+            </button>
+            <button class="px-3.5 h-9 rounded-md bg-status-danger text-white text-xs font-medium">
+              Tolak Pengajuan
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Action Bottom Sheet -->
+      <div class="bg-neutral-canvas border border-neutral-border rounded-lg p-4 space-y-2">
+        <p class="text-xs font-semibold uppercase tracking-wider text-neutral-text-secondary">Bottom Sheet Filter / Action</p>
+        
+        <div class="bg-white border border-neutral-border rounded-t-xl p-5 max-w-sm mx-auto shadow-sm space-y-4">
+          <div class="w-10 h-1 bg-neutral-border-subtle rounded-full mx-auto"></div>
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-neutral-text-primary">Pilih Shift Kerja</h3>
+            <span class="text-xs text-brand-700 font-medium cursor-pointer">Reset</span>
+          </div>
+          <div class="space-y-2">
+            <label class="flex items-center justify-between p-2.5 border border-brand-700 bg-brand-50 rounded-md text-xs cursor-pointer">
+              <span class="font-medium text-brand-900">Shift Pagi (08:00 - 16:00)</span>
+              <span class="w-4 h-4 rounded-full border-2 border-brand-700 flex items-center justify-center">
+                <span class="w-2 h-2 rounded-full bg-brand-700"></span>
+              </span>
+            </label>
+            <label class="flex items-center justify-between p-2.5 border border-neutral-border rounded-md text-xs cursor-pointer hover:bg-neutral-canvas">
+              <span class="text-neutral-text-primary">Shift Sore (16:00 - 00:00)</span>
+              <span class="w-4 h-4 rounded-full border border-neutral-border"></span>
+            </label>
+          </div>
+          <button class="w-full h-10 rounded-md bg-brand-700 text-white font-medium text-xs">
+            Terapkan Penugasan
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 9. NAVIGATION COMPONENTS -->
+  <section class="space-y-4">
+    <div class="border-b border-neutral-border pb-2">
+      <h2 class="text-lg font-bold text-neutral-text-primary flex items-center gap-2">
+        <span class="w-2.5 h-2.5 bg-brand-700 rounded-sm"></span>
+        9. Navigation Components (Mobile AppBar & BottomNavigationBar)
+      </h2>
+      <p class="text-xs text-neutral-text-secondary">Disesuaikan secara kaku berdasarkan Role API (OWNER/ADMIN vs EMPLOYEE). Tanpa menu dekoratif.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Navigation for EMPLOYEE -->
+      <div class="bg-white border border-neutral-border rounded-lg p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-brand-800 uppercase tracking-wider">Role: EMPLOYEE</span>
+          <span class="text-[11px] text-neutral-text-secondary">4 Tab Fungsional Pribadi</span>
+        </div>
+
+        <!-- Simulated Mobile Screen Bottom -->
+        <div class="border border-neutral-border rounded-lg overflow-hidden bg-neutral-canvas">
+          <!-- Mini Top AppBar -->
+          <div class="bg-brand-700 text-white px-4 py-3 flex items-center justify-between">
+            <span class="text-xs font-semibold">Presensi & Jadwal</span>
+            <div class="w-6 h-6 rounded bg-brand-800 flex items-center justify-center text-[10px] font-bold">BS</div>
+          </div>
+          <!-- Body Placeholder -->
+          <div class="p-6 text-center text-xs text-neutral-text-secondary">
+            Konten halaman presensi kerja mandiri...
+          </div>
+          <!-- Bottom Navigation Bar (Flutter BottomNavigationBar) -->
+          <div class="bg-white border-t border-neutral-border grid grid-cols-4 py-2 px-1">
+            <div class="flex flex-col items-center gap-1 text-brand-700">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 8.414l2.293 2.293a1 1 0 01-1.414 1.414L9 11.414V6a1 1 0 012 0v4.414z"></path></svg>
+              <span class="text-[10px] font-semibold">Presensi</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-neutral-text-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <span class="text-[10px]">Cuti & Izin</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-neutral-text-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+              <span class="text-[10px]">Slip Gaji</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-neutral-text-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+              <span class="text-[10px]">Profil</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation for OWNER / ADMIN -->
+      <div class="bg-white border border-neutral-border rounded-lg p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Role: OWNER / ADMIN</span>
+          <span class="text-[11px] text-neutral-text-secondary">5 Tab Manajemen Operasional</span>
+        </div>
+
+        <!-- Simulated Mobile Screen Bottom -->
+        <div class="border border-neutral-border rounded-lg overflow-hidden bg-neutral-canvas">
+          <!-- Mini Top AppBar -->
+          <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
+            <span class="text-xs font-semibold">Kelola Operasional Karyawan</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">OWNER</span>
+          </div>
+          <!-- Body Placeholder -->
+          <div class="p-6 text-center text-xs text-neutral-text-secondary">
+            Konten monitoring & persetujuan manajemen...
+          </div>
+          <!-- Bottom Navigation Bar (Flutter BottomNavigationBar) -->
+          <div class="bg-white border-t border-neutral-border grid grid-cols-5 py-2 px-1">
+            <div class="flex flex-col items-center gap-1 text-brand-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+              <span class="text-[9px] font-semibold">Karyawan</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-neutral-text-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span class="text-[9px]">Shift</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-neutral-text-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span class="text-[9px]">Approval</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-neutral-text-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              <span class="text-[9px]">Payroll</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 text-neutral-text-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              <span class="text-[9px]">Akun/Audit</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Summary & Strict Compliance Banner -->
+  <footer class="bg-white border border-neutral-border rounded-lg p-5 text-xs text-neutral-text-secondary flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div>
+      <p class="font-semibold text-neutral-text-primary">Status Kepatuhan Master Prompt:</p>
+      <p>âœ“ Zero AI-Slop (No gradients, no glassmorphism, no fake charts, no decorative cards)</p>
+      <p>âœ“ Realistis untuk implementasi widget Flutter (Material 3 compatible)</p>
+      <p>âœ“ Siap dilanjutkan ke <strong>Tahap 2 â€” Authentication & User Account</strong> setelah persetujuan Anda.</p>
+    </div>
+    <div class="px-3 py-1.5 bg-brand-50 border border-brand-200 text-brand-800 rounded font-semibold text-xs whitespace-nowrap">
+      Tahap 1 Siap Direview
+    </div>
+  </footer>
+
+</body>
+</html>

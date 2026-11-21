@@ -1,0 +1,244 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+
+/// Modular Input Text Field sesuai Tahap 1 Design Foundation.
+/// Dilengkapi label terpisah, asterisk wajib, pesan helper / error kontekstual, dan dukungan monospace.
+class AppTextField extends StatefulWidget {
+  final String? label;
+  final bool isRequired;
+  final String? hintText;
+  final String? helperText;
+  final String? errorText;
+  final TextEditingController? controller;
+  final String? initialValue;
+  final bool obscureText;
+  final bool isPassword;
+  final bool isMonospace;
+  final bool enabled;
+  final bool readOnly;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
+  final TextInputType keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final List<TextInputFormatter>? inputFormatters;
+  final int maxLines;
+
+  const AppTextField({
+    super.key,
+    this.label,
+    this.isRequired = false,
+    this.hintText,
+    this.helperText,
+    this.errorText,
+    this.controller,
+    this.initialValue,
+    this.obscureText = false,
+    this.isPassword = false,
+    this.isMonospace = false,
+    this.enabled = true,
+    this.readOnly = false,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.keyboardType = TextInputType.text,
+    this.textInputAction,
+    this.onChanged,
+    this.onSubmitted,
+    this.inputFormatters,
+    this.maxLines = 1,
+  });
+
+  @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField> {
+  late bool _obscured;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscured = widget.isPassword || widget.obscureText;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
+
+    TextStyle textStyle = widget.isMonospace
+        ? GoogleFonts.jetBrainsMono(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: widget.enabled ? AppColors.textPrimary : AppColors.textMuted,
+          )
+        : GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: widget.enabled ? AppColors.textPrimary : AppColors.textMuted,
+          );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label Header
+        if (widget.label != null) ...[
+          Row(
+            children: [
+              Text(
+                widget.label!,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: widget.enabled
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                ),
+              ),
+              if (widget.isRequired) ...[
+                const SizedBox(width: AppSpacing.space4),
+                const Text(
+                  '*',
+                  style: TextStyle(
+                    color: AppColors.statusDanger,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 6),
+        ],
+
+        // Input Container
+        TextFormField(
+          controller: widget.controller,
+          initialValue: widget.initialValue,
+          obscureText: _obscured,
+          enabled: widget.enabled,
+          readOnly: widget.readOnly,
+          keyboardType: widget.keyboardType,
+          textInputAction: widget.textInputAction,
+          onChanged: widget.onChanged,
+          onFieldSubmitted: widget.onSubmitted,
+          inputFormatters: widget.inputFormatters,
+          maxLines: widget.maxLines,
+          style: textStyle,
+          decoration: InputDecoration(
+            hintText: widget.hintText,
+            hintStyle: widget.isMonospace
+                ? GoogleFonts.jetBrainsMono(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  )
+                : GoogleFonts.inter(
+                    fontSize: 14,
+                    color: AppColors.textMuted,
+                  ),
+            filled: true,
+            fillColor: widget.enabled
+                ? AppColors.surface
+                : const Color(0xFFF1F5F9),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.space12,
+              vertical: 12,
+            ),
+            prefixIcon: widget.prefixIcon != null
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: IconTheme(
+                      data: const IconThemeData(
+                        color: AppColors.textSecondary,
+                        size: 18,
+                      ),
+                      child: widget.prefixIcon!,
+                    ),
+                  )
+                : null,
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 40,
+              minHeight: 44,
+            ),
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscured
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscured = !_obscured;
+                      });
+                    },
+                  )
+                : widget.suffixIcon,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              borderSide: BorderSide(
+                color: hasError ? AppColors.statusDanger : AppColors.border,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              borderSide: BorderSide(
+                color: hasError ? AppColors.statusDanger : AppColors.primary,
+                width: 1.5,
+              ),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              borderSide: const BorderSide(
+                color: AppColors.border,
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+
+        // Contextual Helper / Error Row
+        if (hasError) ...[
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 14,
+                color: AppColors.statusDanger,
+              ),
+              const SizedBox(width: AppSpacing.space4),
+              Expanded(
+                child: Text(
+                  widget.errorText!,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.statusDanger,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ] else if (widget.helperText != null && widget.helperText!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            widget.helperText!,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}

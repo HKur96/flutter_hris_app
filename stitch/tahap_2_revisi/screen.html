@@ -1,0 +1,401 @@
+﻿<!DOCTYPE html><html lang="id"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>KaryaHR â€” Tahap 2 (Revisi): Deployment Configuration &amp; Authentication</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            body: ['"Inter"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#15803D',
+              dark: '#166534',
+              light: '#DCFCE7',
+              tint: '#F0FDF4',
+            },
+            canvas: '#F8FAFC',
+            surface: '#FFFFFF',
+            slateText: {
+              primary: '#0F172A',
+              secondary: '#64748B',
+              muted: '#94A3B8',
+            },
+            borderSubtle: '#E2E8F0',
+            status: {
+              approved: '#15803D',
+              pending: '#B45309',
+              rejected: '#B91C1C',
+              info: '#0369A1',
+            }
+          },
+          boxShadow: {
+            card: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+            device: '0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Mobile screen simulator frame 390x844 dp */
+    .mobile-frame {
+      width: 390px;
+      height: 844px;
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 28px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.1);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slateText-primary font-sans antialiased p-4 md:p-8 min-h-screen">
+<!-- Header Showcase Tahap 2 (Revisi) -->
+<header class="max-w-[1680px] mx-auto mb-8 bg-surface p-6 rounded-xl border border-borderSubtle shadow-card">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-borderSubtle">
+<div>
+<div class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-primary-tint text-primary text-xs font-semibold uppercase tracking-wider mb-2 border border-primary-light">
+          Tahap 2 (Revisi) â€” Deployment Configuration &amp; Authentication
+        </div>
+<h1 class="text-2xl lg:text-3xl font-bold text-slateText-primary tracking-tight">KaryaHR Mobile â€” Screen Showcase</h1>
+<p class="text-sm text-slateText-secondary mt-1 font-body">
+          Penambahan alur gerbang inisialisasi Deployment ID (GAS Base URL) sebelum autentikasi, states koneksi, serta integrasi tombol Ubah Konfigurasi Server pada login.
+        </p>
+</div>
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-xs px-2.5 py-1 bg-slate-100 text-slateText-secondary rounded border border-borderSubtle font-medium">Material 3 Ready</span>
+<span class="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded border border-emerald-200 font-medium">Google Apps Script Backend</span>
+<span class="text-xs px-2.5 py-1 bg-slate-100 text-slateText-secondary rounded border border-borderSubtle font-medium">Local Config Storage</span>
+<span class="text-xs px-2.5 py-1 bg-primary text-white rounded font-medium">Zero AI-Slop</span>
+</div>
+</div>
+<!-- State Navigation / Index Guide -->
+<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5 mt-4 text-xs font-medium text-slateText-secondary">
+<div class="p-2.5 rounded bg-slate-50 border border-borderSubtle">
+<span class="font-bold text-slateText-primary block">01. Hubungkan Aplikasi</span>
+        Input ID &amp; Dynamic Base URL
+      </div>
+<div class="p-2.5 rounded bg-slate-50 border border-borderSubtle">
+<span class="font-bold text-slateText-primary block">02. State Koneksi Server</span>
+        Connecting, Sukses &amp; Error
+      </div>
+<div class="p-2.5 rounded bg-slate-50 border border-borderSubtle">
+<span class="font-bold text-slateText-primary block">03. Login Screen</span>
+        Server Chip &amp; Switcher Config
+      </div>
+<div class="p-2.5 rounded bg-slate-50 border border-borderSubtle">
+<span class="font-bold text-slateText-primary block">04. Setup OWNER Pertama</span>
+        Inisialisasi jika DB Kosong
+      </div>
+<div class="p-2.5 rounded bg-slate-50 border border-borderSubtle">
+<span class="font-bold text-slateText-primary block">05. Profil &amp; Ganti Sandi</span>
+        GET /api/v1/auth/me &amp; Dialog
+      </div>
+<div class="p-2.5 rounded bg-slate-50 border border-borderSubtle">
+<span class="font-bold text-slateText-primary block">06. Buat Akun Pengguna</span>
+        Matriks Role OWNER vs ADMIN
+      </div>
+</div>
+</header>
+<!-- Container Grid untuk Seluruh Screen Mobile Mockup (390x844 dp) -->
+<main class="max-w-[1680px] mx-auto flex flex-wrap justify-center gap-7 items-start">
+<!-- ========================================== -->
+<!-- LAYAR 01: DEPLOYMENT CONFIGURATION (INITIAL & FILLED) -->
+<!-- ========================================== -->
+<div class="flex flex-col items-center">
+<div class="text-xs font-semibold text-slateText-secondary mb-2.5 flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-bold text-slateText-primary">LAYAR 01:</span> Hubungkan Aplikasi (Config Initial)
+      </div>
+<div class="mobile-frame">
+<!-- Status Bar M3 -->
+<div class="h-10 px-6 bg-surface flex justify-between items-center text-xs font-semibold text-slateText-secondary border-b border-slate-100 shrink-0">
+<span>09:41</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-sm">wifi</span>
+<span class="material-symbols-outlined text-sm">battery_full</span>
+</div>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-5 custom-scrollbar bg-surface flex flex-col justify-between">
+<div>
+<!-- Header Brand Minimal -->
+<div class="pt-2 mb-6">
+
+<h2 class="text-xl font-bold text-slateText-primary tracking-tight">Hubungkan Aplikasi</h2>
+<p class="text-xs text-slateText-secondary mt-1.5 font-body leading-relaxed">
+                Masukkan Kode Aktivasi untuk menghubungkan aplikasi ke server perusahaan Anda.
+              </p>
+</div>
+<!-- Form Configuration -->
+<form class="space-y-4" onsubmit="event.preventDefault();">
+<!-- Field Deployment ID -->
+<div>
+<label class="block text-xs font-semibold text-slateText-primary mb-1">
+                  Kode Aktivasi <span class="text-status-rejected">*</span>
+</label>
+<div class="relative">
+<input class="w-full h-11 px-3 text-xs font-mono bg-white border border-borderSubtle rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-slateText-primary font-medium" placeholder="AKfycbx_vM7z9L3..." type="text" value="AKfycbx8u9_qL-2zN7T5xK1m4pA8_YwX0vR9sJ3">
+<div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slateText-muted">
+<span class="material-symbols-outlined text-sm">dns</span>
+</div>
+</div>
+
+</div>
+<!-- Base URL Dynamic Preview -->
+
+<!-- Storage & Persistence Note -->
+
+</form>
+</div>
+<!-- Bottom Action Button -->
+<div class="pt-4 border-t border-slate-100">
+<button class="w-full h-11 bg-primary text-white rounded-md font-semibold text-xs flex items-center justify-center gap-2 hover:bg-primary-dark transition active:scale-[0.99] shadow-sm">
+<span class="material-symbols-outlined text-base">link</span>
+<span>Hubungkan Server</span>
+</button>
+
+</div>
+</div>
+<!-- Android Home Indicator -->
+<div class="h-4 bg-surface flex justify-center items-center shrink-0">
+<div class="w-28 h-1 bg-slate-300 rounded-full"></div>
+</div>
+</div>
+<span class="text-[11px] text-slateText-secondary mt-1.5 font-body">Input ID, Preview URL dinamis &amp; simpan lokal</span>
+</div>
+<!-- ========================================== -->
+<!-- LAYAR 02: DEPLOYMENT CONFIGURATION (STATES) -->
+<!-- ========================================== -->
+
+<!-- ========================================== -->
+<!-- LAYAR 03: LOGIN SCREEN (WITH SERVER CHIP) -->
+<!-- ========================================== -->
+<div class="flex flex-col items-center">
+<div class="text-xs font-semibold text-slateText-secondary mb-2.5 flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-bold text-slateText-primary">LAYAR 02<span style="font-size: 0.75rem;">:</span></span> Login (Server Context &amp; Switcher)
+      </div>
+<div class="mobile-frame">
+<!-- Status Bar -->
+<div class="h-10 px-6 bg-surface flex justify-between items-center text-xs font-semibold text-slateText-secondary border-b border-slate-100 shrink-0">
+<span>09:41</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-sm">wifi</span>
+<span class="material-symbols-outlined text-sm">battery_full</span>
+</div>
+</div>
+<!-- Content -->
+<div class="flex-1 overflow-y-auto p-5 custom-scrollbar bg-surface flex flex-col justify-between">
+<div>
+<!-- Header Brand -->
+<div class="pt-2 mb-4">
+
+<h2 class="text-xl font-bold text-slateText-primary tracking-tight">Masuk ke Akun</h2>
+<p class="text-xs text-slateText-secondary mt-1 font-body">Masukkan email terdaftar dan kata sandi Anda.</p>
+</div>
+<!-- SERVER CHIP INDICATOR (Fitur Revisi) -->
+
+<!-- Form -->
+<form class="space-y-3.5" onsubmit="event.preventDefault();">
+<!-- Field Email -->
+<div>
+<label class="block text-xs font-semibold text-slateText-primary mb-1">
+                  Email Akun <span class="text-status-rejected">*</span>
+</label>
+<input class="w-full h-11 px-3 bg-white text-xs border border-borderSubtle rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-slateText-primary font-medium" placeholder="nama@perusahaan.com" type="email" value="budi.santoso@karya.id">
+</div>
+<!-- Field Kata Sandi -->
+<div>
+<label class="block text-xs font-semibold text-slateText-primary mb-1">
+                  Kata Sandi <span class="text-status-rejected">*</span>
+</label>
+<div class="relative">
+<input class="w-full h-11 px-3 pr-10 bg-white text-xs border border-borderSubtle rounded-md focus:outline-none focus:border-primary text-slateText-primary font-medium" placeholder="Masukkan kata sandi" type="password" value="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+<button class="absolute inset-y-0 right-0 pr-3 flex items-center text-slateText-secondary hover:text-slateText-primary" type="button">
+<span class="material-symbols-outlined text-sm">visibility_off</span>
+</button>
+</div>
+</div>
+<!-- Info Akses (Sesuai Batasan Scope API) -->
+<div class="p-2.5 bg-slate-50 border border-slate-200 rounded text-[11px] text-slateText-secondary font-body leading-relaxed flex items-start gap-1.5">
+<span class="material-symbols-outlined text-xs text-slateText-secondary mt-0.5 shrink-0">info</span>
+<span><strong class="text-slateText-primary">Informasi Akses:</strong> Hubungi Administrator atau Owner jika Anda lupa kata sandi akun kerja.</span>
+</div>
+</form>
+</div>
+<!-- Bottom Actions & State Sample -->
+<div class="pt-4 border-t border-slate-100 space-y-2">
+<!-- Normal Button -->
+<button class="w-full h-11 bg-primary text-white rounded-md font-semibold text-xs flex items-center justify-center hover:bg-primary-dark transition active:scale-[0.99] shadow-sm">
+              Masuk
+            </button>
+<!-- In-progress state demonstration -->
+<button class="w-full h-10 bg-primary/75 text-white rounded-md font-semibold text-xs flex items-center justify-center gap-2 cursor-not-allowed" disabled="">
+<svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+<path class="opacity-75" d="M4 12a8 8 0 018-8v8H4z" fill="currentColor"></path>
+</svg>
+<span>Memproses Autentikasi...</span>
+</button>
+<div class="text-center pt-1">
+
+</div>
+</div>
+</div>
+<!-- Android Home Bar -->
+<div class="h-4 bg-surface flex justify-center items-center shrink-0">
+<div class="w-28 h-1 bg-slate-300 rounded-full"></div>
+</div>
+</div>
+<span class="text-[11px] text-slateText-secondary mt-1.5 font-body">Dilengkapi Chip Server &amp; Link Reset Config</span>
+</div>
+<!-- ========================================== -->
+<!-- LAYAR 04: SCREEN SETUP OWNER PERTAMA -->
+<!-- ========================================== -->
+<div class="flex flex-col items-center">
+<div class="text-xs font-semibold text-slateText-secondary mb-2.5 flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-bold text-slateText-primary">LAYAR 03:</span> Setup OWNER Pertama
+      </div>
+<div class="mobile-frame">
+<!-- Status Bar -->
+<div class="h-10 px-6 bg-surface flex justify-between items-center text-xs font-semibold text-slateText-secondary border-b border-slate-100 shrink-0">
+<span>09:41</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-sm">wifi</span>
+<span class="material-symbols-outlined text-sm">battery_full</span>
+</div>
+</div>
+<!-- Content -->
+<div class="flex-1 overflow-y-auto p-5 custom-scrollbar bg-surface flex flex-col justify-between">
+<div>
+<div class="pt-2 mb-5">
+
+<h2 class="text-xl font-bold text-slateText-primary tracking-tight">Inisialisasi Sistem</h2>
+<p class="text-xs text-slateText-secondary mt-1 font-body leading-relaxed">
+                Buat akun OWNER utama untuk mengelola aplikasi. Formulir ini hanya muncul saat belum ada akun terdaftar di sistem.
+              </p>
+</div>
+<!-- Form -->
+<form class="space-y-3.5" onsubmit="event.preventDefault();">
+<div>
+<label class="block text-xs font-semibold text-slateText-primary mb-1">
+                  Email OWNER <span class="text-status-rejected">*</span>
+</label>
+<input class="w-full h-11 px-3 bg-white text-xs border border-borderSubtle rounded-md focus:outline-none focus:border-primary text-slateText-primary font-medium" placeholder="nama@perusahaan.com" type="email" value="owner@karyahr.id">
+<p class="text-[11px] text-slateText-muted mt-1 font-body">Email aktif untuk akses administratif penuh.</p>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slateText-primary mb-1">
+                  Kata Sandi <span class="text-status-rejected">*</span>
+</label>
+<div class="relative">
+<input class="w-full h-11 px-3 pr-10 bg-white text-xs border border-borderSubtle rounded-md focus:outline-none focus:border-primary text-slateText-primary font-medium" placeholder="Minimal 8 karakter" type="password" value="Password123#">
+<button class="absolute inset-y-0 right-0 pr-3 flex items-center text-slateText-secondary" type="button">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</div>
+</div>
+<div>
+<label class="block text-xs font-semibold text-slateText-primary mb-1">
+                  Konfirmasi Kata Sandi <span class="text-status-rejected">*</span>
+</label>
+<div class="relative">
+<input class="w-full h-11 px-3 pr-10 bg-white text-xs border border-borderSubtle rounded-md focus:outline-none focus:border-primary text-slateText-primary font-medium" placeholder="Ulangi kata sandi" type="password" value="Password123#">
+<button class="absolute inset-y-0 right-0 pr-3 flex items-center text-slateText-secondary" type="button">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</div>
+<p class="text-[11px] text-primary mt-1 flex items-center gap-1 font-medium font-body">
+<span class="material-symbols-outlined text-xs">check</span>
+                  Konfirmasi kata sandi sesuai
+                </p>
+</div>
+<div class="p-3 bg-slate-50 border border-borderSubtle rounded-md text-[11px] text-slateText-secondary leading-normal font-body">
+                Akun otomatis ditetapkan dengan role <span class="font-semibold text-slateText-primary">OWNER</span> yang memiliki otoritas mutlak konfigurasi data HRIS.
+              </div>
+</form>
+</div>
+<!-- Bottom Action -->
+<div class="pt-4 border-t border-slate-100">
+<button class="w-full h-11 bg-primary text-white rounded-md font-semibold text-xs flex items-center justify-center hover:bg-primary-dark transition active:scale-[0.99] shadow-sm">
+              Buat Akun OWNER
+            </button>
+</div>
+</div>
+<!-- Android Home Bar -->
+<div class="h-4 bg-surface flex justify-center items-center shrink-0">
+<div class="w-28 h-1 bg-slate-300 rounded-full"></div>
+</div>
+</div>
+<span class="text-[11px] text-slateText-secondary mt-1.5 font-body">Hanya dipanggil jika database backend berstatus zero-user</span>
+</div>
+<!-- ========================================== -->
+<!-- LAYAR 05: USER PROFILE & CHANGE PASSWORD -->
+<!-- ========================================== -->
+
+<!-- ========================================== -->
+<!-- LAYAR 06: CREATE USER (OWNER & ADMIN MATRIX) -->
+<!-- ========================================== -->
+
+</main>
+<!-- Catatan Kepatuhan Arsitektur & Aturan API Contract -->
+<footer class="max-w-[1680px] mx-auto mt-10 p-6 bg-surface rounded-xl border border-borderSubtle shadow-card text-xs text-slateText-secondary">
+<div class="flex items-center gap-2 mb-3 pb-2 border-b border-borderSubtle">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+<span class="font-bold text-slateText-primary uppercase tracking-wider text-[11px]">Kepatuhan Arsitektur &amp; Batasan API Contract Tahap 2</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 font-body">
+<div>
+<span class="font-bold text-slateText-primary block mb-1">1. Alur Inisialisasi Aplikasi:</span>
+<span class="text-[11px] leading-relaxed">
+          Buka Aplikasi â†’ Periksa Local Storage (<code class="bg-slate-100 px-1 py-0.5 rounded text-slateText-primary font-mono">SharedPreferences</code>) â†’ Belum ada Deployment ID? Tampilkan Layar 01 (Hubungkan Aplikasi) â†’ Koneksi Sukses? Simpan &amp; arahkan ke Layar Login.
+        </span>
+</div>
+<div>
+<span class="font-bold text-slateText-primary block mb-1">2. Ketiadaan Health-Check API:</span>
+<span class="text-[11px] leading-relaxed">
+          API Contract tidak menyediakan endpoint khusus <code class="bg-slate-100 px-1 py-0.5 rounded text-slateText-primary font-mono">/health-check</code>. Pengujian koneksi dilakukan dengan memeriksa respons HTTP awal pada Base URL atau pre-flight ping tanpa membuat endpoint fiktif.
+        </span>
+</div>
+<div>
+<span class="font-bold text-slateText-primary block mb-1">3. Persistensi &amp; Independensi:</span>
+<span class="text-[11px] leading-relaxed">
+          Deployment ID disimpan secara lokal di perangkat, independen dari status autentikasi atau akun pengguna yang login. Tombol "Ubah Konfigurasi" pada form login memungkinkan penggantian URL tanpa reinstall aplikasi.
+        </span>
+</div>
+<div>
+<span class="font-bold text-slateText-primary block mb-1">4. Zero AI-Slop &amp; Clean M3:</span>
+<span class="text-[11px] leading-relaxed">
+          Tidak ada gradient berlebih, tidak ada neumorphism, palet warna Forest Green (<code class="text-primary font-semibold">#15803D</code>), border netral, Plus Jakarta Sans &amp; Material Symbols murni Flutter ready.
+        </span>
+</div>
+</div>
+</footer>
+
+
+</body></html>
