@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -613,7 +614,8 @@ class AdminDashboardView extends StatelessWidget {
                 icon: Icons.fact_check_outlined,
                 label: 'Presensi',
                 onTap: () {
-                  Navigator.of(context).pushNamed('/admin/shell');
+                  Navigator.of(context)
+                      .pushNamed(AppConstants.kRouteAdminShell);
                 },
               ),
             ),
@@ -623,7 +625,8 @@ class AdminDashboardView extends StatelessWidget {
                 icon: Icons.person_add_outlined,
                 label: 'Input Staf',
                 onTap: () {
-                  Navigator.of(context).pushNamed('/admin/shell');
+                  Navigator.of(context)
+                      .pushNamed(AppConstants.kRouteAdminShell);
                 },
               ),
             ),
@@ -633,7 +636,8 @@ class AdminDashboardView extends StatelessWidget {
                 icon: Icons.calendar_month_outlined,
                 label: 'Shift Roster',
                 onTap: () {
-                  Navigator.of(context).pushNamed('/admin/shell');
+                  Navigator.of(context)
+                      .pushNamed(AppConstants.kRouteAdminShell);
                 },
               ),
             ),
@@ -643,7 +647,8 @@ class AdminDashboardView extends StatelessWidget {
                 icon: Icons.event_busy_outlined,
                 label: 'Rekap Cuti',
                 onTap: () {
-                  Navigator.of(context).pushNamed('/admin/shell');
+                  Navigator.of(context)
+                      .pushNamed(AppConstants.kRouteAdminShell);
                 },
               ),
             ),

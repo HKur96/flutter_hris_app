@@ -1,29 +1,32 @@
 import 'package:intl/intl.dart';
 
-/// Helper format mata uang Rupiah (IDR) sesuai kaidah penulisan standar Indonesia.
 class CurrencyFormatter {
   CurrencyFormatter._();
 
-  static final NumberFormat _formatter = NumberFormat.currency(
+  static final NumberFormat _full = NumberFormat.currency(
     locale: 'id_ID',
-    symbol: 'Rp ',
+    symbol: 'Rp',
     decimalDigits: 0,
   );
 
-  /// Format angka menjadi format Rupiah, contoh: 1500000 -> "Rp 1.500.000"
-  static String format(num amount) {
-    return _formatter.format(amount).replaceAll(',00', '');
-  }
+  /// Full format: Rp4.250.000
+  static String format(double amount) => _full.format(amount);
 
-  /// Format angka menjadi format ringkas (K, M, Jt), misal untuk grafik/metrik sempit
-  static String formatCompact(num amount) {
-    if (amount >= 1000000000) {
-      return 'Rp ${(amount / 1000000000).toStringAsFixed(1)} M';
-    } else if (amount >= 1000000) {
-      return 'Rp ${(amount / 1000000).toStringAsFixed(1)} Jt';
+  /// Abbreviated format: Rp4,25 jt / Rp680 rb
+  static String abbreviated(double amount) {
+    if (amount >= 1000000) {
+      final jt = amount / 1000000;
+      final formatted = jt == jt.roundToDouble()
+          ? jt.toInt().toString()
+          : jt.toStringAsFixed(2).replaceAll('.', ',');
+      return 'Rp$formatted jt';
     } else if (amount >= 1000) {
-      return 'Rp ${(amount / 1000).toStringAsFixed(0)} Rb';
+      final rb = amount / 1000;
+      final formatted = rb == rb.roundToDouble()
+          ? rb.toInt().toString()
+          : rb.toStringAsFixed(1).replaceAll('.', ',');
+      return 'Rp$formatted rb';
     }
-    return format(amount);
+    return _full.format(amount);
   }
 }

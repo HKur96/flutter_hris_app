@@ -8,3 +8,4 @@ export 'app_list_item.dart';
 export 'app_dialog.dart';
 export 'app_bottom_sheet.dart';
 export 'app_navigation_bar.dart';
+export 'app_role_slider.dart';

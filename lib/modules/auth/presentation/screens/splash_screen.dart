@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/enum.dart';
 import 'package:flutter_hris_app/core/helper/dio_helper.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
@@ -39,7 +40,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (deploymentId == null) {
         if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed('/deployment-config');
+        Navigator.of(context)
+            .pushReplacementNamed(AppConstants.kRouteDeploymentConfig);
         return;
       }
 
@@ -64,22 +66,25 @@ class _SplashScreenState extends State<SplashScreen> {
         if (setupStatus != null &&
             setupStatus.needsSetup &&
             !setupStatus.hasOwner) {
-          Navigator.of(context).pushReplacementNamed('/initial-owner-setup');
+          Navigator.of(context)
+              .pushReplacementNamed(AppConstants.kRouteInitOwnerSetup);
         } else {
-          Navigator.of(context).pushReplacementNamed('/login');
+          Navigator.of(context).pushReplacementNamed(AppConstants.kRouteLogin);
         }
       } else {
         // Jika currentUser ada, arahkan ke shell sesuai role
         if (user.role == Role.admin || user.role == Role.owner) {
-          Navigator.of(context).pushReplacementNamed('/admin/shell');
+          Navigator.of(context)
+              .pushReplacementNamed(AppConstants.kRouteAdminShell);
         } else {
-          Navigator.of(context).pushReplacementNamed('/employee/shell');
+          Navigator.of(context)
+              .pushReplacementNamed(AppConstants.kRouteEmployeeShell);
         }
       }
     } catch (_) {
       // Jika terjadi kegagalan baca storage, default aman ke login
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed('/login');
+      Navigator.of(context).pushReplacementNamed(AppConstants.kRouteLogin);
     }
   }
 

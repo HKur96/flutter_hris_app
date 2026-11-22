@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/global.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/deployment_config_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/initial_owner_setup_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/login_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/splash_screen.dart';
+import 'package:flutter_hris_app/modules/employee_management/presentation/provider/employee_management_provider.dart';
+import 'package:flutter_hris_app/modules/employee_management/presentation/screens/add_edit_employee_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:requests_inspector/requests_inspector.dart';
@@ -42,7 +45,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeManagementProvider()),
+      ],
       child: MaterialApp(
         title: 'KaryaHR Mobile',
         debugShowCheckedModeBanner: false,
@@ -56,16 +62,21 @@ class MyApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
         ],
         // Mengarahkan rute awal aplikasi ke SplashScreen
-        initialRoute: '/',
+        initialRoute: AppConstants.kRouteRoot,
         routes: {
-          '/': (context) => const SplashScreen(),
-          '/splash': (context) => const SplashScreen(),
-          '/login': (context) => const LoginScreen(),
-          '/deployment-config': (context) => const DeploymentConfigScreen(),
-          '/initial-owner-setup': (context) => const InitialOwnerSetupScreen(),
-          '/dashboard': (context) => const DashboardScreen(showAppBar: true),
-          '/employee/shell': (context) => const EmployeeShell(),
-          '/admin/shell': (context) => const AdminShell(),
+          AppConstants.kRouteRoot: (context) => const SplashScreen(),
+          AppConstants.kRouteSplash: (context) => const SplashScreen(),
+          AppConstants.kRouteLogin: (context) => const LoginScreen(),
+          AppConstants.kRouteDeploymentConfig: (context) =>
+              const DeploymentConfigScreen(),
+          AppConstants.kRouteInitOwnerSetup: (context) =>
+              const InitialOwnerSetupScreen(),
+          AppConstants.kRouteDashboard: (context) =>
+              const DashboardScreen(showAppBar: true),
+          AppConstants.kRouteEmployeeShell: (context) => const EmployeeShell(),
+          AppConstants.kRouteAdminShell: (context) => const AdminShell(),
+          AppConstants.kRouteAddEditEmployee: (context) =>
+              const AddEditEmployeeScreen(),
           ...AdminRoutes.routes,
           ...EmployeeRoutes.routes,
         },

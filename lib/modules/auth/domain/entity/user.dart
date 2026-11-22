@@ -24,6 +24,8 @@ class User extends Equatable {
     required this.updatedAt,
   });
 
+  bool get canManage => role == Role.admin || role == Role.owner;
+
   @override
   List<Object?> get props => [
     id,

@@ -385,15 +385,16 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
     "success": true,
     "status": 201,
     "data": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
       "user": {
         "id": "11111111-2222-4333-8444-555555555555",
         "email": "owner@company.com",
+        "name": null,
         "role": "OWNER",
+        "employee_id": null,
         "store_name": "Toko Berkah Abadi",
         "is_active": true
-      },
-      "store_name": "Toko Berkah Abadi",
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      }
     }
   }
   ```
@@ -488,31 +489,79 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
     "password": "PasswordRahasia123!"
   }
   ```
-- **Contoh Response (200):**
+- **Catatan Parameter `name` & `store_name` pada Response:**
+  - Field `name` dan `store_name` dimasukkan ke dalam objek `data.user` (bukan di level root `data` bersama token).
+  - Jika user tertaut ke data karyawan (`role: EMPLOYEE` atau akun yang memiliki `employee_id`), field `user.name` akan berisi nama lengkap dari tabel `employees` (misal `"Budi Santoso"`).
+  - Jika user adalah `OWNER` (tidak memiliki relasi ke tabel `employees`), field `user.name` akan bernilai `null`.
+- **Contoh Response (200 — Login Karyawan):**
   ```json
   {
     "success": true,
     "status": 200,
     "data": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
       "user": {
         "id": "22222222-3333-4444-8555-666666666666",
         "email": "budi.santoso@company.com",
+        "name": "Budi Santoso",
         "role": "EMPLOYEE",
         "employee_id": "e4b5f8c2-3e44-4f81-a589-918237461234",
+        "store_name": "Toko Berkah Abadi",
+        "is_active": true,
+        "employee": {
+          "id": "e4b5f8c2-3e44-4f81-a589-918237461234",
+          "name": "Budi Santoso",
+          "nik": "3201123456780001",
+          "position": "Staff Kasir",
+          "department": "Operasional"
+        }
+      }
+    }
+  }
+  ```
+- **Contoh Response (200 — Login OWNER):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": "11111111-2222-4333-8444-555555555555",
+        "email": "owner@company.com",
+        "name": null,
+        "role": "OWNER",
+        "employee_id": null,
+        "store_name": "Toko Berkah Abadi",
         "is_active": true
-      },
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      }
     }
   }
   ```
 
 ---
 
-### 4.3. Profile Pengguna Aktif (`GET /api/v1/auth/me`)
+### 4.7. Profile Pengguna Aktif (`GET /api/v1/auth/me`)
 
 - **Method:** `GET`
 - **Path:** `/api/v1/auth/me`
 - **Role:** `OWNER`, `ADMIN`, `EMPLOYEE`
+- **Contoh Response (200):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "id": "11111111-2222-4333-8444-555555555555",
+      "email": "owner@company.com",
+      "name": null,
+      "role": "OWNER",
+      "employee_id": null,
+      "store_name": "Toko Berkah Abadi",
+      "is_active": true
+    }
+  }
+  ```
 - **Contoh curl:**
   ```bash
   curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/auth/me&auth_token=YOUR_TOKEN"
@@ -520,7 +569,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 
 ---
 
-### 4.4. Ganti Password Mandiri (`POST /api/v1/auth/change-password`)
+### 4.8. Ganti Password Mandiri (`POST /api/v1/auth/change-password`)
 
 - **Method:** `POST`
 - **Path:** `/api/v1/auth/change-password`
@@ -536,7 +585,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 
 ---
 
-### 4.5. Create User Akun Baru (`POST /api/v1/users`)
+### 4.9. Create User Akun Baru (`POST /api/v1/users`)
 
 - **Method:** `POST`
 - **Path:** `/api/v1/users`

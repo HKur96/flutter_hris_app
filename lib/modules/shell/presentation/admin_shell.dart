@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,7 @@ import '../../../../core/components/components.dart';
 import '../../../../core/shared/app_secure_storage.dart';
 import '../../../../core/shared/responsive_builder.dart';
 import '../../dashboard/presentation/screens/dashboard_screen.dart';
+import '../../employee_management/presentation/screens/employee_list_screen.dart';
 
 /// Shell Navigasi Utama untuk Peran Admin & Owner
 /// Mendukung layout responsif (BottomNavigationBar pada Mobile, NavigationRail pada Tablet/Desktop).
@@ -21,6 +23,12 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   final ValueNotifier<int> _currentIndex = ValueNotifier(0);
 
+  @override
+  void dispose() {
+    _currentIndex.dispose();
+    super.dispose();
+  }
+
   Future<void> _handleLogout() async {
     final confirmed = await AppDialog.showConfirmation(
       context: context,
@@ -33,7 +41,7 @@ class _AdminShellState extends State<AdminShell> {
     if (confirmed == true && mounted) {
       await AppSecureStorage().clearAll();
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil(AppConstants.kRouteLogin, (route) => false);
     }
   }
 
@@ -41,12 +49,6 @@ class _AdminShellState extends State<AdminShell> {
     if (_currentIndex.value != index) {
       _currentIndex.value = index;
     }
-  }
-
-  @override
-  void dispose() {
-    _currentIndex.dispose();
-    super.dispose();
   }
 
   @override
@@ -154,40 +156,86 @@ class _AdminShellState extends State<AdminShell> {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      title: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+      title: Selector<AuthProvider, User?>(
+        selector: (_, p) => p.user,
+        builder: (context, user, _) {
+          return Row(
             children: [
-              Text(
-                'Sixbox HRIS',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Sixbox HRIS',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Selector<AuthProvider, User?>(
+                      selector: (_, p) => p.user,
+                      builder: (context, user, _) {
+                        return Text(
+                          user?.email ?? 'email tidak tersedia',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
-              Selector<AuthProvider, User?>(
-                selector: (_, p) => p.user,
-                builder: (context, user, _) {
-                  return Text(
-                    user?.email ?? 'email tidak tersedia',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                    ),
-                  );
-                }
-              ),
+              _buildAppbarActions(user),
             ],
-          ),
-        ],
+          );
+        },
       ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(color: AppColors.border, height: 1),
       ),
+    );
+  }
+
+  void _openAddEmployee() {
+    Navigator.of(context).pushNamed(AppConstants.kRouteAddEditEmployee);
+  }
+
+  Widget _buildAppbarActions(User? user) {
+    return ValueListenableBuilder<int>(
+      valueListenable: _currentIndex,
+      builder: (_, currentIndex, _) {
+        if (currentIndex == 1 && user?.canManage == true) {
+          return ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(0, 42),
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+              ),
+            ),
+
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text(
+              'Tambah Karyawan',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            onPressed: _openAddEmployee,
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -199,7 +247,7 @@ class _AdminShellState extends State<AdminShell> {
           case 0:
             return const DashboardScreen(showAppBar: false);
           case 1:
-            return _buildEmployeeManagementTab();
+            return const EmployeeListScreen();
           case 2:
             return _buildShiftManagementTab();
           case 3:
@@ -212,135 +260,6 @@ class _AdminShellState extends State<AdminShell> {
             return const DashboardScreen(showAppBar: false);
         }
       },
-    );
-  }
-
-  Widget _buildEmployeeManagementTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.space16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: AppCard(
-                  title: 'Total Karyawan',
-                  trailing: const AppBadge.present(label: 'Aktif'),
-                  child: Text(
-                    '24 Orang',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.space12),
-              Expanded(
-                child: AppCard(
-                  title: 'Departemen',
-                  trailing: const AppBadge.active(label: '4 Divisi'),
-                  child: Text(
-                    '4 Divisi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.space16),
-          AppButton.primary(
-            text: 'Tambah Karyawan Baru',
-            icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Form tambah karyawan siap diintegrasikan'),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.space20),
-          Text(
-            'Daftar Karyawan Terbaru',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space12),
-          AppCard(
-            child: Column(
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    backgroundColor: AppColors.brand100,
-                    child: Text(
-                      'BS',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    'Budi Santoso',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Software Engineer • IT Department',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  trailing: const AppBadge.present(),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    backgroundColor: AppColors.brand100,
-                    child: Text(
-                      'SA',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    'Siti Aminah',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'HR Specialist • Human Resources',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  trailing: const AppBadge.present(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 

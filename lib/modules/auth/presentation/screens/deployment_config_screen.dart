@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hris_app/core/components/app_text_field.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/shared/responsive_builder.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/widgets/exception_container.dart';
@@ -217,9 +218,10 @@ class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
       if (setupStatus != null &&
           setupStatus.needsSetup &&
           !setupStatus.hasOwner) {
-        Navigator.of(context).pushReplacementNamed('/initial-owner-setup');
+        Navigator.of(context)
+            .pushReplacementNamed(AppConstants.kRouteInitOwnerSetup);
       } else {
-        Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.of(context).pushReplacementNamed(AppConstants.kRouteLogin);
       }
     }
   }

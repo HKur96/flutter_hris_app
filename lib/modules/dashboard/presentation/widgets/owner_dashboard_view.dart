@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -518,7 +519,8 @@ class OwnerDashboardView extends StatelessWidget {
                 icon: Icons.badge_outlined,
                 label: 'Kelola Staf',
                 onTap: () {
-                  Navigator.of(context).pushNamed('/admin/shell');
+                  Navigator.of(context)
+                      .pushNamed(AppConstants.kRouteAdminShell);
                 },
               ),
             ),
@@ -528,7 +530,8 @@ class OwnerDashboardView extends StatelessWidget {
                 icon: Icons.payments_outlined,
                 label: 'Payroll',
                 onTap: () {
-                  Navigator.of(context).pushNamed('/admin/shell');
+                  Navigator.of(context)
+                      .pushNamed(AppConstants.kRouteAdminShell);
                 },
               ),
             ),
@@ -548,7 +551,8 @@ class OwnerDashboardView extends StatelessWidget {
                 icon: Icons.history_rounded,
                 label: 'Audit Log',
                 onTap: () {
-                  Navigator.of(context).pushNamed('/admin/shell');
+                  Navigator.of(context)
+                      .pushNamed(AppConstants.kRouteAdminShell);
                 },
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../modules/employee_management/presentation/screens/employee_list_screen.dart';
 
 class AdminRoutes {
   static const String login = '/admin/login';
@@ -17,34 +18,6 @@ class AdminRoutes {
   static const String adminSettings = '/admin/admin-settings';
 
   static Map<String, WidgetBuilder> get routes => {
-    // login: (context) => AdminLoginScreen(),
-
-    // // Admin layout shell initialized with respective route
-    // dashboard: (context) => const AdminLayout(initialRoute: dashboard),
-    // attendanceReport: (context) =>
-    //     const AdminLayout(initialRoute: attendanceReport),
-    // overtimeReport: (context) => const AdminLayout(initialRoute: overtimeReport),
-    // absenceReport: (context) => const AdminLayout(initialRoute: attendanceReport),
-
-    // // Workforce approval
-    // leaveManagement: (context) =>
-    //     const AdminLayout(initialRoute: leaveManagement),
-    // overtimeManagement: (context) =>
-    //     const AdminLayout(initialRoute: overtimeManagement),
-    // attendanceCorrectionApproval: (context) =>
-    //     const AdminLayout(initialRoute: attendanceCorrectionApproval),
-
-    // // Organization & management
-    // employeeManagement: (context) =>
-    //     const AdminLayout(initialRoute: employeeManagement),
-    // departmentManagement: (context) =>
-    //     const AdminLayout(initialRoute: departmentManagement),
-    // shiftManagement: (context) =>
-    //     const AdminLayout(initialRoute: shiftManagement),
-    // payslipManagement: (context) =>
-    //     const AdminLayout(initialRoute: payslipManagement),
-
-    // // System & settings
-    // adminSettings: (context) => const AdminLayout(initialRoute: adminSettings),
+    employeeManagement: (context) => const EmployeeListScreen(showAppBar: true),
   };
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../../core/components/components.dart';
 import '../../../../core/shared/app_secure_storage.dart';
 import '../../../../core/shared/responsive_builder.dart';
@@ -47,7 +49,8 @@ class _EmployeeShellState extends State<EmployeeShell> {
     if (confirmed == true && mounted) {
       await AppSecureStorage().clearAll();
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(AppConstants.kRouteLogin, (route) => false);
     }
   }
 
@@ -127,7 +130,11 @@ class _EmployeeShellState extends State<EmployeeShell> {
               ),
             ],
           ),
-          const VerticalDivider(width: 1, thickness: 1, color: AppColors.border),
+          const VerticalDivider(
+            width: 1,
+            thickness: 1,
+            color: AppColors.border,
+          ),
           Expanded(child: _buildCurrentTab()),
         ],
       ),
@@ -229,9 +236,17 @@ class _EmployeeShellState extends State<EmployeeShell> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('12 Hari', 'Hak Cuti Tahunan', AppColors.primary),
+                _buildStatItem(
+                  '12 Hari',
+                  'Hak Cuti Tahunan',
+                  AppColors.primary,
+                ),
                 Container(height: 36, width: 1, color: AppColors.border),
-                _buildStatItem('3 Hari', 'Sudah Diambil', AppColors.statusWarning),
+                _buildStatItem(
+                  '3 Hari',
+                  'Sudah Diambil',
+                  AppColors.statusWarning,
+                ),
                 Container(height: 36, width: 1, color: AppColors.border),
                 _buildStatItem('9 Hari', 'Sisa Saldo', AppColors.statusSuccess),
               ],
@@ -243,7 +258,9 @@ class _EmployeeShellState extends State<EmployeeShell> {
             icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Form pengajuan cuti siap diintegrasikan')),
+                const SnackBar(
+                  content: Text('Form pengajuan cuti siap diintegrasikan'),
+                ),
               );
             },
           ),
@@ -262,28 +279,46 @@ class _EmployeeShellState extends State<EmployeeShell> {
               children: [
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.beach_access_rounded, color: AppColors.primary),
+                  leading: const Icon(
+                    Icons.beach_access_rounded,
+                    color: AppColors.primary,
+                  ),
                   title: Text(
                     'Cuti Tahunan (2 Hari)',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   subtitle: Text(
                     '10 Nov 2026 - 11 Nov 2026',
-                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   trailing: const AppBadge.approved(),
                 ),
                 const Divider(height: 1, color: AppColors.border),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.medical_services_outlined, color: AppColors.statusWarning),
+                  leading: const Icon(
+                    Icons.medical_services_outlined,
+                    color: AppColors.statusWarning,
+                  ),
                   title: Text(
                     'Izin Sakit (1 Hari)',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   subtitle: Text(
                     '24 Okt 2026 • Disertai surat dokter',
-                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   trailing: const AppBadge.approved(),
                 ),
@@ -329,7 +364,9 @@ class _EmployeeShellState extends State<EmployeeShell> {
                   icon: const Icon(Icons.download_rounded, size: 18),
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Rincian slip gaji siap diintegrasikan')),
+                      const SnackBar(
+                        content: Text('Rincian slip gaji siap diintegrasikan'),
+                      ),
                     );
                   },
                 ),
@@ -353,20 +390,38 @@ class _EmployeeShellState extends State<EmployeeShell> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     'Slip Gaji September 2026',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  subtitle: Text('Dibayarkan 28 Sep 2026', style: GoogleFonts.inter(fontSize: 12)),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                  subtitle: Text(
+                    'Dibayarkan 28 Sep 2026',
+                    style: GoogleFonts.inter(fontSize: 12),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const Divider(height: 1, color: AppColors.border),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     'Slip Gaji Agustus 2026',
-                    style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  subtitle: Text('Dibayarkan 28 Agu 2026', style: GoogleFonts.inter(fontSize: 12)),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                  subtitle: Text(
+                    'Dibayarkan 28 Agu 2026',
+                    style: GoogleFonts.inter(fontSize: 12),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -425,26 +480,71 @@ class _EmployeeShellState extends State<EmployeeShell> {
               children: [
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('Informasi Pribadi & Kontak', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600)),
-                  subtitle: Text('NIK, Departemen, No. HP', style: GoogleFonts.inter(fontSize: 12)),
-                  leading: const Icon(Icons.badge_outlined, color: AppColors.primary),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                  title: Text(
+                    'Informasi Pribadi & Kontak',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'NIK, Departemen, No. HP',
+                    style: GoogleFonts.inter(fontSize: 12),
+                  ),
+                  leading: const Icon(
+                    Icons.badge_outlined,
+                    color: AppColors.primary,
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const Divider(height: 1, color: AppColors.border),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('Keamanan Akun', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600)),
-                  subtitle: Text('Ganti kata sandi', style: GoogleFonts.inter(fontSize: 12)),
-                  leading: const Icon(Icons.lock_outline_rounded, color: AppColors.primary),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                  title: Text(
+                    'Keamanan Akun',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Ganti kata sandi',
+                    style: GoogleFonts.inter(fontSize: 12),
+                  ),
+                  leading: const Icon(
+                    Icons.lock_outline_rounded,
+                    color: AppColors.primary,
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const Divider(height: 1, color: AppColors.border),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text('Pengaturan Notifikasi', style: GoogleFonts.plusJakartaSans(fontSize: 13, fontWeight: FontWeight.w600)),
-                  subtitle: Text('Pengingat presensi & cuti', style: GoogleFonts.inter(fontSize: 12)),
-                  leading: const Icon(Icons.notifications_none_rounded, color: AppColors.primary),
-                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+                  title: Text(
+                    'Pengaturan Notifikasi',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Pengingat presensi & cuti',
+                    style: GoogleFonts.inter(fontSize: 12),
+                  ),
+                  leading: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: AppColors.primary,
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),

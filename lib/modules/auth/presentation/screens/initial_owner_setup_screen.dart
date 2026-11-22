@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hris_app/core/components/app_text_field.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/helper/validator.dart';
 import 'package:flutter_hris_app/core/shared/responsive_builder.dart';
 import 'package:flutter_hris_app/core/theme/app_radius.dart';
@@ -88,7 +89,7 @@ class _InitialOwnerSetupScreenState extends State<InitialOwnerSetupScreen> {
     });
 
     if (user != null) {
-      Navigator.of(context).pushReplacementNamed('/admin/shell');
+      Navigator.of(context).pushReplacementNamed(AppConstants.kRouteAdminShell);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

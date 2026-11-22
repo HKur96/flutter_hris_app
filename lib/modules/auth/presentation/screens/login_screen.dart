@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hris_app/core/components/app_text_field.dart';
+import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/enum.dart';
 import 'package:flutter_hris_app/core/shared/responsive_builder.dart';
 import 'package:flutter_hris_app/core/theme/app_radius.dart';
@@ -48,9 +49,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (user == null || !mounted) return;
 
       if (user.role == Role.admin || user.role == Role.owner) {
-        Navigator.of(context).pushReplacementNamed('/admin/shell');
+        Navigator.of(context)
+            .pushReplacementNamed(AppConstants.kRouteAdminShell);
       } else {
-        Navigator.of(context).pushReplacementNamed('/employee/shell');
+        Navigator.of(context)
+            .pushReplacementNamed(AppConstants.kRouteEmployeeShell);
       }
     });
   }
