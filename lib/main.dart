@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/deployment-config': (context) => const DeploymentConfigScreen(),
           '/initial-owner-setup': (context) => const InitialOwnerSetupScreen(),
-          '/dashboard': (context) => const DashboardScreen(),
+          '/dashboard': (context) => const DashboardScreen(showAppBar: true),
           '/employee/shell': (context) => const EmployeeShell(),
           '/admin/shell': (context) => const AdminShell(),
           ...AdminRoutes.routes,

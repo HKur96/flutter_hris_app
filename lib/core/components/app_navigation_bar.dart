@@ -60,6 +60,11 @@ class AppBottomNavBar extends StatelessWidget {
 
   static const List<AppNavItem> adminItems = [
     AppNavItem(
+      label: 'Beranda',
+      activeIcon: Icons.dashboard_rounded,
+      inactiveIcon: Icons.dashboard_outlined,
+    ),
+    AppNavItem(
       label: 'Karyawan',
       activeIcon: Icons.people_alt_rounded,
       inactiveIcon: Icons.people_alt_outlined,
@@ -78,11 +83,6 @@ class AppBottomNavBar extends StatelessWidget {
       label: 'Payroll',
       activeIcon: Icons.payments_rounded,
       inactiveIcon: Icons.payments_outlined,
-    ),
-    AppNavItem(
-      label: 'Akun/Audit',
-      activeIcon: Icons.admin_panel_settings_rounded,
-      inactiveIcon: Icons.admin_panel_settings_outlined,
     ),
   ];
 

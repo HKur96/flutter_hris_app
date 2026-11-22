@@ -18,6 +18,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  late final AuthProvider _authProvider = context.read<AuthProvider>();
+
   @override
   void initState() {
     super.initState();
@@ -28,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkCurrentUserSession() async {
     // Beri sedikit jeda waktu agar transisi layar splash nyaman
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 300));
 
     if (!mounted) return;
 
@@ -48,13 +50,13 @@ class _SplashScreenState extends State<SplashScreen> {
       );
       DioHelper.instance.baseUrl = '$baseUrl$deploymentId/exec';
 
-      final user = await AppSecureStorage().currentUser;
+      final user = await _authProvider.getCurrentUser();
 
       if (!mounted) return;
 
       if (user == null) {
         // Cek setup-status backend apakah butuh setup owner pertama kali
-        final setupStatus = await context.read<AuthProvider>().checkSetupStatus(
+        final setupStatus = await _authProvider.checkSetupStatus(
           showLoadingDialog: false,
         );
         if (!mounted) return;

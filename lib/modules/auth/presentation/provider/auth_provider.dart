@@ -26,6 +26,23 @@ class AuthProvider with ChangeNotifier {
   SetupStatus? get setupStatus => _setupStatus;
   String? get loadingMessage => _loadingMessage;
 
+  Future<au.User?> getCurrentUser() async {
+    try {
+      _loadingMessage = 'Sedang menyiapkan data Anda';
+      _errorMessage = null;
+      notifyListeners();
+
+      _user = await AppSecureStorage().currentUser;
+
+      return _user;
+    } catch (e) {
+      return null;
+    } finally {
+      _loadingMessage = null;
+      notifyListeners();
+    }
+  }
+
   Future<SetupStatus?> checkSetupStatus({bool showLoadingDialog = true}) async {
     var completer = Completer();
     try {
@@ -38,7 +55,7 @@ class AuthProvider with ChangeNotifier {
       }
       _errorMessage = null;
       notifyListeners();
-      
+
       final res = await _repository.checkSetupStatus();
 
       res.fold(

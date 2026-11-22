@@ -374,9 +374,11 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   ```json
   {
     "email": "owner@company.com",
-    "password": "SuperSecretPassword123!"
+    "password": "SuperSecretPassword123!",
+    "store_name": "Toko Berkah Abadi"
   }
   ```
+  _(Catatan: `store_name` bersifat opsional saat setup awal; jika tidak dikirimkan, default `"HRIS Store"` akan digunakan)._
 - **Contoh Response (201):**
   ```json
   {
@@ -387,8 +389,10 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
         "id": "11111111-2222-4333-8444-555555555555",
         "email": "owner@company.com",
         "role": "OWNER",
+        "store_name": "Toko Berkah Abadi",
         "is_active": true
       },
+      "store_name": "Toko Berkah Abadi",
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     }
   }
@@ -396,7 +400,83 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 
 ---
 
-### 4.2. Login Akun (`POST /api/v1/auth/login`)
+### 4.3. Update Profil & Nama Toko (`PUT /api/v1/auth/profile`)
+
+- **Method:** `PUT` (atau `POST` dengan override query `?_method=PUT` / body `_method: "PUT"`)
+- **Path:** `/api/v1/auth/profile`
+- **Role:** `OWNER`, `ADMIN` (untuk mengubah nama toko), `EMPLOYEE` (hanya melihat / update data dirinya)
+- **Request Payload:**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "store_name": "Toko Berkah Makmur Sejahtera"
+  }
+  ```
+- **Contoh Response (200):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "id": "11111111-2222-4333-8444-555555555555",
+      "email": "owner@company.com",
+      "role": "OWNER",
+      "store_name": "Toko Berkah Makmur Sejahtera",
+      "is_active": true
+    },
+    "meta": {
+      "message": "Profile updated successfully"
+    }
+  }
+  ```
+
+---
+
+### 4.4. Update Nama Toko Eksplisit (`PUT /api/v1/auth/store`)
+
+- **Method:** `PUT` (atau `POST` dengan `_method: "PUT"`)
+- **Path:** `/api/v1/auth/store`
+- **Role:** `OWNER`, `ADMIN`
+- **Request Payload:**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "store_name": "PT Retail Nusantara Utama"
+  }
+  ```
+- **Contoh Response (200):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "message": "Store name updated successfully",
+      "store_name": "PT Retail Nusantara Utama"
+    }
+  }
+  ```
+
+---
+
+### 4.5. Ambil Profil Nama Toko (`GET /api/v1/auth/store`)
+
+- **Method:** `GET`
+- **Path:** `/api/v1/auth/store`
+- **Role:** Publik / Terautentikasi
+- **Contoh Response (200):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "store_name": "PT Retail Nusantara Utama"
+    }
+  }
+  ```
+
+---
+
+### 4.6. Login Akun (`POST /api/v1/auth/login`)
 
 - **Method:** `POST`
 - **Path:** `/api/v1/auth/login`

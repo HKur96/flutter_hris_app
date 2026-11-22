@@ -1,248 +1,89 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
+import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/components/components.dart';
-import '../../../../core/shared/app_secure_storage.dart';
+import 'package:provider/provider.dart';
 
-/// Screen Dashboard Utama (Employee / Admin)
+import '../../../../core/components/components.dart';
+import '../../../../core/config/enum.dart';
+import '../widgets/admin_dashboard_view.dart';
+import '../widgets/employee_dashboard_view.dart';
+import '../widgets/owner_dashboard_view.dart';
+
+/// Screen Dashboard Utama (Role-Based: Owner, Admin HR, Employee)
+/// Sesuai implementasi Stitch Mobile Phase 1 — Role-Based Dashboard.
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final bool showAppBar;
+
+  const DashboardScreen({super.key, this.showAppBar = false});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _activeNavIndex = 0;
-  String _currentUserDisplay = 'Pengguna';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUser();
-  }
-
-  Future<void> _loadUser() async {
-    final user = await AppSecureStorage().currentUser;
-    if (user != null && mounted) {
-      setState(() {
-        _currentUserDisplay = user.email;
-      });
-    }
-  }
-
-  Future<void> _handleLogout() async {
-    final shouldLogout = await AppDialog.showConfirmation(
-      context: context,
-      title: 'Keluar dari Akun?',
-      message: 'Sesi login akan dihapus dari penyimpanan perangkat ini.',
-      confirmText: 'Keluar',
-      isDestructive: true,
-    );
-
-    if (shouldLogout == true && mounted) {
-      await AppSecureStorage().clearAll();
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.canvas,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'KaryaHR Mobile',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            Text(
-              _currentUserDisplay,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                color: AppColors.textSecondary,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Keluar Sesi',
-            icon: const Icon(
-              Icons.logout_rounded,
-              size: 20,
-              color: AppColors.statusDanger,
-            ),
-            onPressed: _handleLogout,
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: AppColors.border,
-            height: 1,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.space16,
-            vertical: AppSpacing.space20,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Banner Selamat Datang
-              AppCard(
-                padding: const EdgeInsets.all(AppSpacing.space16),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.brand50,
-                        borderRadius: BorderRadius.circular(AppRadius.medium),
-                        border: Border.all(color: AppColors.brand200),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.waving_hand_rounded,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.space12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Selamat Datang!',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Presensi dan operasional kerja siap digunakan.',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.space16),
+    return Selector<AuthProvider, User?>(
+      selector: (_, p) => p.user,
+      builder: (_, user, _) {
+        Widget content;
+        switch (user?.role) {
+          case Role.owner:
+            content = OwnerDashboardView(user: user, onRefresh: () async {});
+            break;
+          case Role.admin:
+            content = AdminDashboardView(user: user, onRefresh: () async {});
+            break;
+          default:
+            content = EmployeeDashboardView(user: user, onRefresh: () async {});
+            break;
+        }
 
-              // Status Presensi Hari Ini
-              AppCard(
-                title: 'Status Presensi Hari Ini',
-                trailing: const AppBadge.present(),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Jadwal Shift',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          'Pagi (08:00 - 16:00 WIB)',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Jam Masuk (Check-in)',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          '07:55 WIB (Tepat Waktu)',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.statusSuccess,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.space16),
+        final refreshableContent = RefreshIndicator(
+          color: AppColors.primary,
+          backgroundColor: AppColors.surface,
+          onRefresh: () async {},
+          child: content,
+        );
 
-              // Ringkasan Pengajuan Terakhir
-              Text(
-                'Pengajuan Terakhir',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+        if (!widget.showAppBar) {
+          return refreshableContent;
+        }
+        return Scaffold(
+          backgroundColor: AppColors.canvas,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sixbox HRIS',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.space8),
-              AppLeaveListItem(
-                title: 'Cuti Tahunan (2 Hari)',
-                dateRange: '24 Feb 2025 - 25 Feb 2025',
-                note: 'Urusan Keluarga',
-                submitDate: '20 Feb 2025',
-                statusType: AppBadgeType.pending,
-                statusLabel: 'PENDING',
-                onTap: () {},
-              ),
-              AppLeaveListItem(
-                title: 'Izin Sakit (1 Hari)',
-                dateRange: '10 Feb 2025',
-                note: 'Surat Dokter Terlampir',
-                submitDate: '10 Feb 2025',
-                approvedBy: 'Admin HR',
-                statusType: AppBadgeType.approved,
-                statusLabel: 'APPROVED',
-                onTap: () {},
-              ),
-            ],
+                Text(
+                  user?.name ?? '-',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(color: AppColors.border, height: 1),
+            ),
           ),
-        ),
-      ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: _activeNavIndex,
-        role: AppNavRole.employee,
-        onTap: (index) {
-          setState(() {
-            _activeNavIndex = index;
-          });
-        },
-      ),
+          body: SafeArea(child: refreshableContent),
+        );
+      },
     );
   }
 }
