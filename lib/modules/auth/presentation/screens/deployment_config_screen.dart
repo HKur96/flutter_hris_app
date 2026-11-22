@@ -2,13 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_hris_app/core/helper/dio_helper.dart';
-import 'package:flutter_hris_app/core/shared/app_secure_storage.dart';
-import 'package:flutter_hris_app/core/widget/app_text_field.dart';
+import 'package:flutter_hris_app/core/components/app_text_field.dart';
+import 'package:flutter_hris_app/core/shared/responsive_builder.dart';
+import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
+import 'package:flutter_hris_app/modules/auth/presentation/widgets/exception_container.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 
 /// Layar 01: Hubungkan Aplikasi (Deployment Configuration)
 /// Sesuai UI Stitch tahap_2_revisi
@@ -20,6 +22,8 @@ class DeploymentConfigScreen extends StatefulWidget {
 }
 
 class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
+  late final AuthProvider _authProvider = context.read<AuthProvider>();
+
   final TextEditingController _firstController = TextEditingController();
   final TextEditingController _secondController = TextEditingController();
   final TextEditingController _thirdController = TextEditingController();
@@ -34,10 +38,38 @@ class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
   final FocusNode _fifthFocus = FocusNode();
   final FocusNode _sixthFocus = FocusNode();
 
-  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
+  final ValueNotifier<bool> _isFormValid = ValueNotifier(false);
+
+  void _validateForm() {
+    _isFormValid.value =
+        _firstController.text.isNotEmpty &&
+        _secondController.text.isNotEmpty &&
+        _thirdController.text.isNotEmpty &&
+        _fourthController.text.isNotEmpty &&
+        _fifthController.text.isNotEmpty &&
+        _sixthController.text.isNotEmpty;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _firstController.addListener(_validateForm);
+    _secondController.addListener(_validateForm);
+    _thirdController.addListener(_validateForm);
+    _fourthController.addListener(_validateForm);
+    _fifthController.addListener(_validateForm);
+    _sixthController.addListener(_validateForm);
+  }
 
   @override
   void dispose() {
+    _firstController.removeListener(_validateForm);
+    _secondController.removeListener(_validateForm);
+    _thirdController.removeListener(_validateForm);
+    _fourthController.removeListener(_validateForm);
+    _fifthController.removeListener(_validateForm);
+    _sixthController.removeListener(_validateForm);
+
     _firstController.dispose();
     _secondController.dispose();
     _thirdController.dispose();
@@ -51,6 +83,8 @@ class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
     _fourthFocus.dispose();
     _fifthFocus.dispose();
     _sixthFocus.dispose();
+
+    _isFormValid.dispose();
     super.dispose();
   }
 
@@ -154,12 +188,13 @@ class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
         focusNode: focusNode,
         textAlign: TextAlign.center,
         textCapitalization: TextCapitalization.characters,
-        textInputType: TextInputType.text,
-        inputFormatter: [
+        keyboardType: TextInputType.text,
+        verticalPadding: 12,
+        inputFormatters: [
           LengthLimitingTextInputFormatter(6),
           FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
         ],
-        onFieldSubmitted: (v) {
+        onSubmitted: (v) {
           _handleConnectServer();
         },
         onChanged: (val) => _onCodeChanged(
@@ -174,46 +209,31 @@ class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
     );
   }
 
-  Future<bool> _handleConnectServer() async {
-    try {
-      _isLoading.value = true;
+  Future<void> _handleConnectServer() async {
+    if (await _authProvider.connectServer(_code) && mounted) {
+      final setupStatus = await _authProvider.checkSetupStatus();
+      if (!mounted) return;
 
-      // Ambil deployment_id dari database berdasarkan kode pendek
-      final response = await Supabase.instance.client
-          .from('app_configs')
-          .select('deployment_id')
-          .eq('short_code', _code)
-          .maybeSingle();
-
-      if (response == null) {
-        _isLoading.value = false;
-        return false; // Kode tidak ditemukan
+      if (setupStatus != null &&
+          setupStatus.needsSetup &&
+          !setupStatus.hasOwner) {
+        Navigator.of(context).pushReplacementNamed('/initial-owner-setup');
+      } else {
+        Navigator.of(context).pushReplacementNamed('/login');
       }
-
-      final deploymentId = response['deployment_id'] as String;
-
-      // Simpan ke DioHelper Singleton dan penyimpanan lokal (SharedPreferences)
-      const baseUrl = String.fromEnvironment(
-        'base_url',
-        defaultValue: 'https://script.google.com/macros/s/',
-      );
-      DioHelper.instance.baseUrl = '$baseUrl$deploymentId/exec';
-
-      await AppSecureStorage().writeDeploymentId(deploymentId);
-
-      if (!mounted) return false;
-      _isLoading.value = false;
-      Navigator.of(context).pushReplacementNamed('/login');
-
-      return true;
-    } catch (e) {
-      _isLoading.value = false;
-      return false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    return ResponsiveBuilder(
+      mobile: _buildMobileLayout(),
+      tablet: _buildWideLayout(maxWidth: 500),
+      desktop: _buildWideLayout(maxWidth: 540),
+    );
+  }
+
+  Widget _buildMobileLayout() {
     return Scaffold(
       backgroundColor: AppColors.canvas,
       body: SafeArea(
@@ -226,73 +246,126 @@ class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Brand Minimal
                     ..._buildHeader(),
                     const SizedBox(height: 40),
-
-                    // Form Field: Deployment ID
                     ..._buildField(),
+                    _buildErrorMessage(),
                   ],
                 ),
               ),
             ),
-
-            // Bottom Action Button
-            ValueListenableBuilder<bool>(
-              valueListenable: _isLoading,
-              builder: (context, isLoading, child) {
-                return Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: Color(0xFFF1F5F9), width: 1),
-                    ),
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 44,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _handleConnectServer,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: AppColors.primary.withOpacity(
-                          0.7,
-                        ),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Hubungkan Server',
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                );
-              },
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                ),
+              ),
+              child: _buildActionButton(),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildWideLayout({required double maxWidth}) {
+    return Scaffold(
+      backgroundColor: AppColors.canvas,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.large),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ..._buildHeader(),
+                    const SizedBox(height: 32),
+                    ..._buildField(),
+                    _buildErrorMessage(),
+                    const SizedBox(height: 32),
+                    _buildActionButton(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton() {
+    return Selector<AuthProvider, bool>(
+      selector: (context, provider) => provider.isLoadingLogin,
+      builder: (context, isLoading, child) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: _isFormValid,
+          builder: (context, isFormValid, child) {
+            return SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: isLoading || !isFormValid
+                    ? null
+                    : _handleConnectServer,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.primary.withValues(
+                    alpha: 0.7,
+                  ),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Hubungkan Server',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isFormValid && !isLoading
+                                  ? Colors.white
+                                  : Colors.grey.shade300,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -343,79 +416,94 @@ class _DeploymentConfigScreenState extends State<DeploymentConfigScreen> {
       ),
       const SizedBox(height: 10),
       Center(
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.85,
-          height: 52,
-          child: Row(
-            spacing: 8,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                child: _buildCodeInput(
-                  controller: _firstController,
-                  focusNode: _firstFocus,
-                  nextFocus: _secondFocus,
-                  prevFocus: null,
-                  index: 0,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: SizedBox(
+            height: 52,
+            child: Row(
+              spacing: 8,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: _buildCodeInput(
+                    controller: _firstController,
+                    focusNode: _firstFocus,
+                    nextFocus: _secondFocus,
+                    prevFocus: null,
+                    index: 0,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _buildCodeInput(
-                  controller: _secondController,
-                  focusNode: _secondFocus,
-                  nextFocus: _thirdFocus,
-                  prevFocus: _firstFocus,
-                  index: 1,
+                Expanded(
+                  child: _buildCodeInput(
+                    controller: _secondController,
+                    focusNode: _secondFocus,
+                    nextFocus: _thirdFocus,
+                    prevFocus: _firstFocus,
+                    index: 1,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _buildCodeInput(
-                  controller: _thirdController,
-                  focusNode: _thirdFocus,
-                  nextFocus: _fourthFocus,
-                  prevFocus: _secondFocus,
-                  index: 2,
+                Expanded(
+                  child: _buildCodeInput(
+                    controller: _thirdController,
+                    focusNode: _thirdFocus,
+                    nextFocus: _fourthFocus,
+                    prevFocus: _secondFocus,
+                    index: 2,
+                  ),
                 ),
-              ),
-              Text(
-                '-',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 20,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
+                Text(
+                  '-',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _buildCodeInput(
-                  controller: _fourthController,
-                  focusNode: _fourthFocus,
-                  nextFocus: _fifthFocus,
-                  prevFocus: _thirdFocus,
-                  index: 3,
+                Expanded(
+                  child: _buildCodeInput(
+                    controller: _fourthController,
+                    focusNode: _fourthFocus,
+                    nextFocus: _fifthFocus,
+                    prevFocus: _thirdFocus,
+                    index: 3,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _buildCodeInput(
-                  controller: _fifthController,
-                  focusNode: _fifthFocus,
-                  nextFocus: _sixthFocus,
-                  prevFocus: _fourthFocus,
-                  index: 4,
+                Expanded(
+                  child: _buildCodeInput(
+                    controller: _fifthController,
+                    focusNode: _fifthFocus,
+                    nextFocus: _sixthFocus,
+                    prevFocus: _fourthFocus,
+                    index: 4,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _buildCodeInput(
-                  controller: _sixthController,
-                  focusNode: _sixthFocus,
-                  nextFocus: null,
-                  prevFocus: _fifthFocus,
-                  index: 5,
+                Expanded(
+                  child: _buildCodeInput(
+                    controller: _sixthController,
+                    focusNode: _sixthFocus,
+                    nextFocus: null,
+                    prevFocus: _fifthFocus,
+                    index: 5,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     ];
+  }
+
+  Widget _buildErrorMessage() {
+    return Selector<AuthProvider, String?>(
+      selector: (_, p) => p.errorMessage,
+      builder: (_, errorMessage, _) {
+        if (errorMessage == null) {
+          return const SizedBox.shrink();
+        }
+
+        return ExceptionContainer(errorMessage: errorMessage, marginTop: 32);
+      },
+    );
   }
 }

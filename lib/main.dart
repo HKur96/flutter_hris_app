@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_hris_app/core/config/global.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/deployment_config_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/initial_owner_setup_screen.dart';
@@ -14,9 +16,15 @@ import 'core/config/admin_routes.dart';
 import 'core/config/employee_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'modules/dashboard/presentation/screens/dashboard_screen.dart';
+import 'modules/shell/presentation/admin_shell.dart';
+import 'modules/shell/presentation/employee_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   await _initializeSupabase();
   runApp(RequestsInspector(enabled: kDebugMode, child: const MyApp()));
 }
@@ -38,6 +46,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'KaryaHR Mobile',
         debugShowCheckedModeBanner: false,
+        navigatorKey: gNavigatorKey,
         theme: AppTheme.lightTheme,
         locale: const Locale('in', 'ID'),
         supportedLocales: const [Locale('in', 'ID')],
@@ -55,6 +64,8 @@ class MyApp extends StatelessWidget {
           '/deployment-config': (context) => const DeploymentConfigScreen(),
           '/initial-owner-setup': (context) => const InitialOwnerSetupScreen(),
           '/dashboard': (context) => const DashboardScreen(),
+          '/employee/shell': (context) => const EmployeeShell(),
+          '/admin/shell': (context) => const AdminShell(),
           ...AdminRoutes.routes,
           ...EmployeeRoutes.routes,
         },

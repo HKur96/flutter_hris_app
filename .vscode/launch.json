@@ -6,7 +6,8 @@
       "request": "launch",
       "type": "dart",
       "args": [
-        "--dart-define-from-file=api-keys.json"
+        "--dart-define-from-file=api-keys.json",
+        "--web-browser-flag=--disable-web-security"
       ]
     }
   ]

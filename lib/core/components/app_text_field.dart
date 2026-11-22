@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -28,6 +29,14 @@ class AppTextField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
+  final double verticalPadding;
+  final EdgeInsetsGeometry? contentPadding;
+  final bool? isDense;
+  final TextAlign textAlign;
+  final TextCapitalization textCapitalization;
+  final FocusNode? focusNode;
+  final String? Function(String?)? validator;
+  final TapRegionCallback? onTapOutside;
 
   const AppTextField({
     super.key,
@@ -46,11 +55,19 @@ class AppTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.keyboardType = TextInputType.text,
-    this.textInputAction,
+    this.textInputAction = TextInputAction.next,
     this.onChanged,
     this.onSubmitted,
     this.inputFormatters,
     this.maxLines = 1,
+    this.verticalPadding = 10,
+    this.contentPadding,
+    this.isDense,
+    this.textAlign = TextAlign.start,
+    this.textCapitalization = TextCapitalization.none,
+    this.focusNode,
+    this.validator,
+    this.onTapOutside,
   });
 
   @override
@@ -67,17 +84,26 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   @override
+  void didUpdateWidget(covariant AppTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.obscureText != widget.obscureText) {
+      _obscured = widget.obscureText;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bool hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
+    final bool hasError =
+        widget.errorText != null && widget.errorText!.isNotEmpty;
 
     TextStyle textStyle = widget.isMonospace
         ? GoogleFonts.jetBrainsMono(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: widget.enabled ? AppColors.textPrimary : AppColors.textMuted,
           )
         : GoogleFonts.inter(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.w400,
             color: widget.enabled ? AppColors.textPrimary : AppColors.textMuted,
           );
@@ -88,30 +114,25 @@ class _AppTextFieldState extends State<AppTextField> {
       children: [
         // Label Header
         if (widget.label != null) ...[
-          Row(
-            children: [
-              Text(
-                widget.label!,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: widget.enabled
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
-                ),
+          RichText(
+            text: TextSpan(
+              text: widget.label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
-              if (widget.isRequired) ...[
-                const SizedBox(width: AppSpacing.space4),
-                const Text(
-                  '*',
-                  style: TextStyle(
-                    color: AppColors.statusDanger,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+              children: [
+                if (widget.isRequired)
+                  TextSpan(
+                    text: '*',
+                    style: TextStyle(
+                      color: AppColors.statusDanger,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
               ],
-            ],
+            ),
           ),
           const SizedBox(height: 6),
         ],
@@ -120,7 +141,9 @@ class _AppTextFieldState extends State<AppTextField> {
         TextFormField(
           controller: widget.controller,
           initialValue: widget.initialValue,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           obscureText: _obscured,
+          focusNode: widget.focusNode,
           enabled: widget.enabled,
           readOnly: widget.readOnly,
           keyboardType: widget.keyboardType,
@@ -129,26 +152,31 @@ class _AppTextFieldState extends State<AppTextField> {
           onFieldSubmitted: widget.onSubmitted,
           inputFormatters: widget.inputFormatters,
           maxLines: widget.maxLines,
+          validator: widget.validator,
+          onTapOutside: widget.onTapOutside,
           style: textStyle,
+          textAlign: widget.textAlign,
+          textCapitalization: widget.textCapitalization,
           decoration: InputDecoration(
             hintText: widget.hintText,
+
             hintStyle: widget.isMonospace
                 ? GoogleFonts.jetBrainsMono(
                     fontSize: 12,
                     color: AppColors.textMuted,
                   )
-                : GoogleFonts.inter(
-                    fontSize: 14,
-                    color: AppColors.textMuted,
-                  ),
+                : GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
             filled: true,
             fillColor: widget.enabled
                 ? AppColors.surface
                 : const Color(0xFFF1F5F9),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.space12,
-              vertical: 12,
-            ),
+            isDense: widget.isDense,
+            contentPadding:
+                widget.contentPadding ??
+                EdgeInsets.symmetric(
+                  horizontal: AppSpacing.space12,
+                  vertical: widget.verticalPadding,
+                ),
             prefixIcon: widget.prefixIcon != null
                 ? Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -197,10 +225,7 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.medium),
-              borderSide: const BorderSide(
-                color: AppColors.border,
-                width: 1,
-              ),
+              borderSide: const BorderSide(color: AppColors.border, width: 1),
             ),
           ),
         ),
@@ -228,7 +253,8 @@ class _AppTextFieldState extends State<AppTextField> {
               ),
             ],
           ),
-        ] else if (widget.helperText != null && widget.helperText!.isNotEmpty) ...[
+        ] else if (widget.helperText != null &&
+            widget.helperText!.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(
             widget.helperText!,

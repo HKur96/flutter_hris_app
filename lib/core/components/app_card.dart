@@ -47,7 +47,7 @@ class AppCard extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           const SizedBox(height: AppSpacing.space12),

@@ -19,6 +19,7 @@ class DioHelper {
         ),
       ) {
     dio.interceptors.addAll([
+      _GasCorsInterceptor(),
       _DioLoggingInterceptor(),
       _GoogleAppsScriptRedirectInterceptor(dio),
       RequestsInspectorInterceptor(),
@@ -158,6 +159,39 @@ class DioHelper {
   }
 }
 
+/// Interceptor khusus untuk Web Browser (CORS Simple Request).
+/// Sesuai API-REFERENCE.md Seksi 1.A:
+/// Runtime Google Apps Script menolak preflight HTTP OPTIONS dari browser.
+/// Menggunakan header `Content-Type: text/plain;charset=utf-8` dan body string JSON
+/// agar browser memperlakukan request sebagai CORS "simple request" tanpa preflight OPTIONS.
+class _GasCorsInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (kIsWeb) {
+      options.headers.removeWhere((key, _) => key.toString().toLowerCase() == 'content-type');
+      options.headers['content-type'] = 'text/plain;charset=utf-8';
+      options.contentType = 'text/plain;charset=utf-8';
+      if (options.data != null && options.data is! String) {
+        options.data = jsonEncode(options.data);
+      }
+    }
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (response.data is String) {
+      final str = (response.data as String).trim();
+      if (str.startsWith('{') || str.startsWith('[')) {
+        try {
+          response.data = jsonDecode(str);
+        } catch (_) {}
+      }
+    }
+    handler.next(response);
+  }
+}
+
 /// Interceptor untuk mencetak log Request, Payload / Body, QueryParams, dan Response secara jelas di console
 class _DioLoggingInterceptor extends Interceptor {
   @override
@@ -168,6 +202,9 @@ class _DioLoggingInterceptor extends Interceptor {
       buffer.writeln('│ 🚀 [DIO REQUEST] ${options.method} ${options.uri}');
       if (options.queryParameters.isNotEmpty) {
         buffer.writeln('│ 🔍 QueryParams: ${options.queryParameters}');
+      }
+      if (options.headers.isNotEmpty) {
+        buffer.writeln('│ 📋 Headers: ${options.headers}');
       }
       if (options.data != null) {
         buffer.writeln('│ 📦 Payload / Body: ${_formatPayload(options.data)}');
@@ -251,6 +288,15 @@ class _GoogleAppsScriptRedirectInterceptor extends Interceptor {
               extra: {'is_redirect_fetch': true},
             ),
           );
+          // Pastikan body ter-decode jika masih berbentuk JSON String
+          if (redirectedResponse.data is String) {
+            final str = (redirectedResponse.data as String).trim();
+            if (str.startsWith('{') || str.startsWith('[')) {
+              try {
+                redirectedResponse.data = jsonDecode(str);
+              } catch (_) {}
+            }
+          }
           // Pertahankan RequestOptions dan Payload asli agar tercatat di Logger & RequestsInspector
           redirectedResponse.requestOptions = originalOptions;
           return handler.resolve(redirectedResponse);
@@ -280,6 +326,15 @@ class _GoogleAppsScriptRedirectInterceptor extends Interceptor {
               extra: {'is_redirect_fetch': true},
             ),
           );
+          // Pastikan body ter-decode jika masih berbentuk JSON String
+          if (redirectedResponse.data is String) {
+            final str = (redirectedResponse.data as String).trim();
+            if (str.startsWith('{') || str.startsWith('[')) {
+              try {
+                redirectedResponse.data = jsonDecode(str);
+              } catch (_) {}
+            }
+          }
           // Pertahankan RequestOptions dan Payload asli agar tercatat di Logger & RequestsInspector
           redirectedResponse.requestOptions = originalOptions;
           return handler.resolve(redirectedResponse);

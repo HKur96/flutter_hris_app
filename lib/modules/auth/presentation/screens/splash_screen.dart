@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/config/enum.dart';
 import 'package:flutter_hris_app/core/helper/dio_helper.dart';
+import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/components/components.dart';
 import '../../../../core/shared/app_secure_storage.dart';
@@ -17,7 +21,9 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkCurrentUserSession();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkCurrentUserSession();
+    });
   }
 
   Future<void> _checkCurrentUserSession() async {
@@ -47,11 +53,26 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       if (user == null) {
-        // Jika currentUser null, arahkan ke halaman login
-        Navigator.of(context).pushReplacementNamed('/login');
+        // Cek setup-status backend apakah butuh setup owner pertama kali
+        final setupStatus = await context.read<AuthProvider>().checkSetupStatus(
+          showLoadingDialog: false,
+        );
+        if (!mounted) return;
+
+        if (setupStatus != null &&
+            setupStatus.needsSetup &&
+            !setupStatus.hasOwner) {
+          Navigator.of(context).pushReplacementNamed('/initial-owner-setup');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
       } else {
-        // Jika currentUser ada, arahkan ke dashboard
-        Navigator.of(context).pushReplacementNamed('/dashboard');
+        // Jika currentUser ada, arahkan ke shell sesuai role
+        if (user.role == Role.admin || user.role == Role.owner) {
+          Navigator.of(context).pushReplacementNamed('/admin/shell');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/employee/shell');
+        }
       }
     } catch (_) {
       // Jika terjadi kegagalan baca storage, default aman ke login
@@ -113,23 +134,23 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: AppSpacing.space32),
 
-              // Loading Spinner Sesuai Design System
-              const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                ),
+              LoadingAnimationWidget.progressiveDots(
+                color: AppColors.primary,
+                size: MediaQuery.of(context).size.width * 0.2,
               ),
               const SizedBox(height: AppSpacing.space12),
 
-              Text(
-                'Memeriksa status akun...',
-                style: GoogleFonts.inter(
-                  fontSize: 11.5,
-                  color: AppColors.textMuted,
-                ),
+              Selector<AuthProvider, String?>(
+                selector: (_, p) => p.loadingMessage,
+                builder: (context, message, _) {
+                  return Text(
+                    message ?? 'Memeriksa status akun...',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      color: AppColors.textMuted,
+                    ),
+                  );
+                },
               ),
             ],
           ),

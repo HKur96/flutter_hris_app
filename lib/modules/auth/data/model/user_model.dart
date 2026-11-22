@@ -16,10 +16,14 @@ class UserModel extends User {
     id: json['id'] ?? '',
     employeeId: json['employee_id'] ?? '',
     email: json['email'] ?? '',
-    role: Role.fromValue(json['role']),
+    role: Role.fromValue(json['role']?.toString() ?? 'employee'),
     isActive: json['is_active'] == true,
-    createdAt: DateTime.parse(json['created_at']),
-    updatedAt: DateTime.parse(json['updated_at']),
+    createdAt: json['created_at'] != null
+        ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
+        : DateTime.now(),
+    updatedAt: json['updated_at'] != null
+        ? (DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now())
+        : DateTime.now(),
   );
 
   Map<String, dynamic> toJson() => {
