@@ -614,7 +614,7 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Coba Lagi (Retry)'),
+                label: const Text('Coba Lagi'),
                 onPressed: () => asgProvider.fetchAssignments(isRefresh: true),
               ),
             ),
@@ -704,7 +704,7 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Tgl Mulai (start_date)',
+                                'Tgl Mulai',
                                 style: GoogleFonts.inter(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w600,
@@ -758,7 +758,7 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Tgl Selesai (end_date)',
+                                'Tgl Selesai',
                                 style: GoogleFonts.inter(
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w600,
@@ -812,7 +812,7 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
 
                     // Filter Template Shift
                     Text(
-                      'Shift Kerja (shift_id)',
+                      'Shift Kerja',
                       style: GoogleFonts.inter(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
@@ -864,7 +864,7 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
 
                     // Filter Karyawan
                     Text(
-                      'Karyawan (employee_id)',
+                      'Karyawan',
                       style: GoogleFonts.inter(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,

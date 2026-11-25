@@ -1,3 +1,4 @@
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -32,7 +33,6 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
   late String _startDate;
   late String _endDate;
   final Set<String> _selectedEmployeeIds = {};
-  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -156,8 +156,6 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
       return;
     }
 
-    setState(() => _isSubmitting = true);
-
     final selectedNames = allEmployees
         .where((e) => _selectedEmployeeIds.contains(e.id))
         .map((e) => e.name)
@@ -177,7 +175,8 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     );
 
     if (!mounted) return;
-    setState(() => _isSubmitting = false);
+
+    print('opo jink $result');
 
     if (result != null) {
       // Navigasi langsung ke Screen 05 (Hasil Penugasan Massal)
@@ -206,99 +205,11 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
 
     final List<EmployeeProfile> employees = empProvider.employees.isNotEmpty
         ? empProvider.employees
-        : [
-            EmployeeProfile(
-              id: 'emp-budi-01',
-              nik: '3201234567890001',
-              name: 'Budi Santoso',
-              email: 'budi@karyahr.com',
-              phone: '081234567890',
-              department: 'Information Technology',
-              position: 'Backend Developer',
-              role: 'EMPLOYEE',
-              employmentStatus: 'ACTIVE',
-              baseSalary: 8000000,
-              createdAt: DateTime(2026, 1, 1),
-              updatedAt: DateTime(2026, 1, 1),
-            ),
-            EmployeeProfile(
-              id: 'emp-dewi-04',
-              nik: '3201234567890004',
-              name: 'Dewi Lestari',
-              email: 'dewi@karyahr.com',
-              phone: '081234567892',
-              department: 'Finance & Accounting',
-              position: 'Finance Officer',
-              role: 'EMPLOYEE',
-              employmentStatus: 'ACTIVE',
-              baseSalary: 7000000,
-              createdAt: DateTime(2026, 1, 1),
-              updatedAt: DateTime(2026, 1, 1),
-            ),
-            EmployeeProfile(
-              id: 'emp-siti-02',
-              nik: '3201234567890002',
-              name: 'Siti Rahmawati',
-              email: 'siti@karyahr.com',
-              phone: '081234567891',
-              department: 'Human Resources',
-              position: 'HR Generalist',
-              role: 'ADMIN',
-              employmentStatus: 'ACTIVE',
-              baseSalary: 7500000,
-              createdAt: DateTime(2026, 1, 1),
-              updatedAt: DateTime(2026, 1, 1),
-            ),
-            EmployeeProfile(
-              id: 'emp-fauzi-03',
-              nik: '3201234567890003',
-              name: 'Ahmad Fauzi',
-              email: 'fauzi@karyahr.com',
-              phone: '081234567893',
-              department: 'Logistik & Operasional',
-              position: 'Staff Logistik',
-              role: 'EMPLOYEE',
-              employmentStatus: 'ACTIVE',
-              baseSalary: 5500000,
-              createdAt: DateTime(2026, 1, 1),
-              updatedAt: DateTime(2026, 1, 1),
-            ),
-          ];
+        : [];
 
     final List<Shift> activeShifts = shiftProvider.shifts.isNotEmpty
         ? shiftProvider.shifts.where((s) => s.isActive).toList()
-        : [
-            const Shift(
-              id: 'shift-pagi-01',
-              name: 'Shift Pagi Regular',
-              startTime: '08:00',
-              endTime: '17:00',
-              breakMinutes: 60,
-              lateToleranceMinutes: 15,
-              isActive: true,
-              isOvernight: false,
-            ),
-            const Shift(
-              id: 'shift-malam-02',
-              name: 'Shift Malam (Overnight)',
-              startTime: '22:00',
-              endTime: '06:00',
-              breakMinutes: 60,
-              lateToleranceMinutes: 15,
-              isActive: true,
-              isOvernight: true,
-            ),
-            const Shift(
-              id: 'shift-siang-03',
-              name: 'Shift Siang Toko',
-              startTime: '13:00',
-              endTime: '21:00',
-              breakMinutes: 60,
-              lateToleranceMinutes: 15,
-              isActive: true,
-              isOvernight: false,
-            ),
-          ];
+        : [];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
@@ -352,7 +263,7 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                     children: [
                       // Field 1: Pilih Template Shift
                       Text(
-                        'Pilih Shift (shift_id) *',
+                        'Pilih Shift',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -419,7 +330,7 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Tgl Mulai (start_date) *',
+                                  'Tgl Mulai',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
@@ -476,7 +387,7 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Tgl Selesai (end_date) *',
+                                  'Tgl Selesai',
                                   style: GoogleFonts.plusJakartaSans(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
@@ -679,34 +590,45 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                       const SizedBox(height: 16),
 
                       // Summary Calculation Preview (Hari x Karyawan = Total Entri)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(AppRadius.medium),
-                          border: Border.all(color: AppColors.border),
+                      DottedBorder(
+                        options: RoundedRectDottedBorderOptions(
+                          radius: const Radius.circular(AppRadius.medium),
+                          strokeWidth: 0.6,
+                          color: Colors.grey,
+                          dashPattern: const [6, 4],
+                          strokeCap: StrokeCap.round,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildPreviewRow(
-                              label: 'Rentang Waktu:',
-                              value: '$_calculatedDays Hari',
+                        child: Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(
+                              AppRadius.medium,
                             ),
-                            const SizedBox(height: 6),
-                            _buildPreviewRow(
-                              label: 'Total Karyawan:',
-                              value: '${_selectedEmployeeIds.length} Karyawan',
-                            ),
-                            const SizedBox(height: 8),
-                            const Divider(height: 1, color: AppColors.border),
-                            const SizedBox(height: 8),
-                            _buildPreviewRow(
-                              label: 'Perkiraan Entri Shift:',
-                              value: '$_estimatedEntries Penugasan Baru',
-                              isHighlight: true,
-                            ),
-                          ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildPreviewRow(
+                                label: 'Rentang Waktu:',
+                                value: '$_calculatedDays Hari',
+                              ),
+                              const SizedBox(height: 6),
+                              _buildPreviewRow(
+                                label: 'Total Karyawan:',
+                                value:
+                                    '${_selectedEmployeeIds.length} Karyawan',
+                              ),
+                              const SizedBox(height: 8),
+                              Divider(height: 1, color: Colors.grey.shade400),
+                              const SizedBox(height: 8),
+                              _buildPreviewRow(
+                                label: 'Perkiraan Entri Shift:',
+                                value: '$_estimatedEntries Penugasan Baru',
+                                isHighlight: true,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -716,61 +638,68 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
             ),
 
             // Sticky Bottom Actions 48dp
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: AppColors.border)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.medium),
-                        ),
-                      ),
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => _submitBulkAssignment(employees),
-                      child: Text(
-                        _isSubmitting
-                            ? 'Memproses Penugasan...'
-                            : 'Simpan Penugasan Shift',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
+            Selector<ShiftAssignmentProvider, bool>(
+              selector: (_, p) => p.isLoading,
+              builder: (context, isLoading, _) {
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(top: BorderSide(color: AppColors.border)),
                   ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 38,
-                    child: TextButton(
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: Text(
-                        'Batalkan',
-                        style: GoogleFonts.inter(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.medium,
+                              ),
+                            ),
+                          ),
+                          onPressed: isLoading
+                              ? null
+                              : () => _submitBulkAssignment(employees),
+                          child: Text(
+                            isLoading
+                                ? 'Memproses Penugasan...'
+                                : 'Simpan Penugasan Shift',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          child: Text(
+                            'Batalkan',
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),

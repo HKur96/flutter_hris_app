@@ -173,6 +173,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
     String? endTime,
     bool? isOvernight,
   }) async {
+    _errorMessage = null;
     _isLoading = true;
     notifyListeners();
 

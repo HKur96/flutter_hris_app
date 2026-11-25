@@ -15,24 +15,6 @@ class BulkAssignmentResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Hasil Penugasan Massal',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: AppColors.border, height: 1),
-        ),
-      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -104,29 +86,19 @@ class BulkAssignmentResultScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'RINGKASAN DATA PENUGASAN',
-                            style: GoogleFonts.inter(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
                           _buildDetailRow(
-                            label: 'Total Penugasan Dibuat (count)',
+                            label: 'Total Penugasan Dibuat',
                             value: '${result.count} Penugasan',
                             isHighlight: true,
                           ),
                           const Divider(height: 16, color: AppColors.border),
                           _buildDetailRow(
-                            label: 'Rentang Hari (totalDays)',
+                            label: 'Rentang Hari',
                             value: '${result.totalDays} Hari',
                           ),
                           const Divider(height: 16, color: AppColors.border),
                           _buildDetailRow(
-                            label: 'Karyawan Terlibat (totalEmployees)',
+                            label: 'Karyawan Terlibat',
                             value: '${result.totalEmployees} Karyawan',
                           ),
                           const Divider(height: 16, color: AppColors.border),
@@ -142,7 +114,7 @@ class BulkAssignmentResultScreen extends StatelessWidget {
                           if (result.employeeNames.isNotEmpty) ...[
                             const Divider(height: 16, color: AppColors.border),
                             Text(
-                              'Penerima Roster:',
+                              'Penerima Shift:',
                               style: GoogleFonts.inter(
                                 fontSize: 11.5,
                                 color: AppColors.textSecondary,
@@ -153,44 +125,11 @@ class BulkAssignmentResultScreen extends StatelessWidget {
                               result.employeeNames.join(', '),
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: AppColors.textPrimary,
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Information Note
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(AppRadius.medium),
-                        border: Border.all(color: const Color(0xFFBBF7D0)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.check_circle_outline_rounded,
-                            size: 18,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Data penugasan kini telah aktif dan dapat langsung dijadikan acuan pencatatan presensi mobile karyawan.',
-                              style: GoogleFonts.inter(
-                                fontSize: 11.5,
-                                color: const Color(0xFF166534),
-                                height: 1.35,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -209,7 +148,7 @@ class BulkAssignmentResultScreen extends StatelessWidget {
               child: SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -218,8 +157,7 @@ class BulkAssignmentResultScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
                   ),
-                  icon: const Icon(Icons.list_alt_rounded, size: 18),
-                  label: Text(
+                  child: Text(
                     'Kembali ke Daftar Penugasan',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
@@ -257,7 +195,7 @@ class BulkAssignmentResultScreen extends StatelessWidget {
           value,
           style: GoogleFonts.inter(
             fontSize: isHighlight ? 13.5 : 12.5,
-            fontWeight: isHighlight ? FontWeight.w800 : FontWeight.w700,
+            fontWeight: isHighlight ? FontWeight.w600 : FontWeight.w500,
             color: isHighlight ? AppColors.primary : AppColors.textPrimary,
           ),
         ),

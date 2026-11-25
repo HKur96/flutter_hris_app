@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_hris_app/core/helper/dio_exception_handler.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/config/base_exception.dart';
@@ -53,11 +54,11 @@ class ShiftAssignmentRepositoryImpl implements ShiftAssignmentRepository {
       );
 
       if (res.data == null || res.data!.isEmpty) {
-        return Left(NetworkException('No data found'));
+        return Right([]);
       }
 
       final list = res.data!
-          .map(
+          .map<ShiftAssignment>(
             (item) =>
                 ShiftAssignmentModel.fromJson(item as Map<String, dynamic>),
           )
@@ -101,14 +102,10 @@ class ShiftAssignmentRepositoryImpl implements ShiftAssignmentRepository {
       final safeDays = totalDays > 0 ? totalDays : 1;
       final count = safeDays * employeeIds.length;
 
-      try {
-        await _dioHelper.postRequest(
-          'api/v1/shift-assignments/bulk',
-          requestBody: payload,
-        );
-      } catch (e) {
-        debugPrint('Bulk endpoint fallback: $e');
-      }
+      await _dioHelper.postRequest(
+        'api/v1/shift-assignments/bulk',
+        requestBody: payload,
+      );
 
       return Right(
         BulkAssignmentResult(
@@ -121,6 +118,8 @@ class ShiftAssignmentRepositoryImpl implements ShiftAssignmentRepository {
           shiftName: shiftName ?? 'Shift Terpilih',
         ),
       );
+    } on DioException catch (e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
     } catch (e) {
       return Left(DataException(e.toString()));
     }

@@ -419,16 +419,17 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
         // 3. Durasi Kerja API Contract Card
         DottedBorder(
           options: RoundedRectDottedBorderOptions(
-            radius: const Radius.circular(16),
+            radius: const Radius.circular(AppRadius.medium),
             strokeWidth: 0.6,
             dashPattern: const [6, 4],
+            color: Colors.grey,
             strokeCap: StrokeCap.round,
           ),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(AppRadius.medium),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,7 +455,7 @@ class _ShiftDetailScreenState extends State<ShiftDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Divider(height: 1, color: Colors.black),
+                Divider(height: 1, color: Colors.grey.shade400),
                 const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
