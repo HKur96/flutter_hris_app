@@ -5,11 +5,15 @@ import 'package:flutter_hris_app/core/config/extension.dart';
 import 'package:flutter_hris_app/core/config/global.dart';
 import 'package:flutter_hris_app/core/shared/app_secure_storage.dart';
 import 'package:flutter_hris_app/modules/auth/data/repository/auth_repository_impl.dart';
+import 'package:flutter_hris_app/modules/auth/domain/auth_repository.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/setup_status.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart' as au;
 
 class AuthProvider with ChangeNotifier {
-  final _repository = AuthRepositoryImpl();
+  final AuthRepository _repository;
+
+  AuthProvider({AuthRepository? repository})
+      : _repository = repository ?? AuthRepositoryImpl();
 
   bool _isLoadingLogin = false;
   String? _errorMessage;

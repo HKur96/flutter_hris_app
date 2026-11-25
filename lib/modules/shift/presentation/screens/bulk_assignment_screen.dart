@@ -206,13 +206,7 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     final shiftProvider = context.watch<ShiftProvider>();
 
     final List<EmployeeProfile> employees = empProvider.employees.isNotEmpty
-        ? empProvider.employees
-              .where(
-                (emp) => widget.employeeId == null
-                    ? false
-                    : emp.id == widget.employeeId,
-              )
-              .toList()
+        ? empProvider.employees.where((emp) => emp.isActive).toList()
         : [];
 
     final List<Shift> activeShifts = shiftProvider.shifts.isNotEmpty

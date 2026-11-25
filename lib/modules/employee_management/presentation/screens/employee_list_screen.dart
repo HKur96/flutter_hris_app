@@ -66,6 +66,13 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
               ),
             )
           : null,
+      floatingActionButton: _user?.canManage == true
+          ? FloatingActionButton(
+              onPressed: _openAddEmployee,
+              backgroundColor: AppColors.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
       body: _buildContent(
         provider,
         _user?.canManage == true,

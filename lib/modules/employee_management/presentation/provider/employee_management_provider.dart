@@ -150,9 +150,11 @@ class EmployeeManagementProvider with ChangeNotifier {
     );
   }
 
+  Future<bool> deleteEmployee(String id) => softDeleteEmployee(id);
+
   Future<bool> softDeleteEmployee(String id) async {
     var completer = Completer();
-    gNavigatorKey.currentContext!.showLoadingDialog(
+    gNavigatorKey.currentContext?.showLoadingDialog(
       dismissCompleter: completer,
       text: 'Sedang menonaktifkan karyawan',
     );

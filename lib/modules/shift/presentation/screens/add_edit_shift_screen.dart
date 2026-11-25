@@ -274,6 +274,8 @@ class _AddEditShiftScreenState extends State<AddEditShiftScreen> {
                         label: 'Nama Shift',
                         hintText: 'cth: Shift Pagi Gudang / Shift Malam',
                         isRequired: true,
+                        validator: (val) =>
+                            Validators.regularValidator('Nama shift', val),
                       ),
                       const SizedBox(height: 4),
                       Text(

@@ -13,7 +13,8 @@ import 'shift_detail_screen.dart';
 /// Mockup 01, 02 & 08: Daftar Master Shift (Shift List) sesuai Stitch Tahap 4.
 /// Dilengkapi filter chip M3, live search, card shift interaktif, dan FAB Tambah Shift.
 class ShiftListScreen extends StatefulWidget {
-  const ShiftListScreen({super.key});
+  final bool? showAppBar;
+  const ShiftListScreen({super.key, this.showAppBar});
 
   @override
   State<ShiftListScreen> createState() => _ShiftListScreenState();
@@ -36,7 +37,7 @@ class _ShiftListScreenState extends State<ShiftListScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
-      appBar: Navigator.canPop(context)
+      appBar: (widget.showAppBar ?? Navigator.canPop(context))
           ? AppBar(
               backgroundColor: Colors.white,
               elevation: 0,

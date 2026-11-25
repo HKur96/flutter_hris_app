@@ -306,14 +306,14 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
     _isLoading = false;
 
-    return result.fold(
-      (failure) {
+    return await result.fold(
+      (failure) async {
         _errorMessage = failure.errorMessage;
         notifyListeners();
         return null;
       },
-      (res) {
-        fetchAssignments();
+      (res) async {
+        await fetchAssignments();
         return res;
       },
     );
@@ -335,16 +335,16 @@ class ShiftAssignmentProvider with ChangeNotifier {
       workDate: workDate,
     );
 
-    return result.fold(
-      (failure) {
+    return await result.fold(
+      (failure) async {
         _errorMessage = failure.errorMessage;
         _isLoading = false;
         notifyListeners();
         return false;
       },
-      (item) {
+      (item) async {
         _isLoading = false;
-        fetchAssignments();
+        await fetchAssignments();
         return true;
       },
     );
@@ -358,16 +358,16 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
     final result = await _repository.deleteShiftAssignment(id);
 
-    return result.fold(
-      (failure) {
+    return await result.fold(
+      (failure) async {
         _errorMessage = failure.errorMessage;
         _isLoading = false;
         notifyListeners();
         return false;
       },
-      (deletedId) {
+      (deletedId) async {
         _isLoading = false;
-        fetchAssignments();
+        await fetchAssignments();
         return true;
       },
     );
@@ -395,17 +395,17 @@ class ShiftAssignmentProvider with ChangeNotifier {
       oldShiftId: oldShiftId,
     );
 
-    return result.fold(
-      (failure) {
+    return await result.fold(
+      (failure) async {
         _errorMessage = failure.errorMessage;
         _isLoading = false;
         notifyListeners();
         return false;
       },
-      (res) {
+      (res) async {
         _isLoading = false;
         clearSelection();
-        fetchAssignments();
+        await fetchAssignments();
         return true;
       },
     );
