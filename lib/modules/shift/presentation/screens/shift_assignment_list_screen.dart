@@ -606,7 +606,7 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                 width: 7 * dayColWidth,
                 child: Column(
                   children: [
-                    // Header 7 Hari (Senin - Minggu)
+                    // Header 7 Hari (Minggu - Sabtu)
                     SizedBox(
                       height: headerHeight,
                       child: Row(
@@ -821,9 +821,7 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
               color: style.bgColor,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: isSelected
-                    ? AppColors.primary
-                    : style.borderColor,
+                color: isSelected ? AppColors.primary : style.borderColor,
                 width: isSelected ? 2.0 : 1.0,
               ),
             ),
@@ -921,7 +919,10 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
               final style = _getShiftStyle(item.shiftName, item.isOvernight);
               return Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 2,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: style.bgColor,
                   borderRadius: BorderRadius.circular(4),
@@ -998,7 +999,11 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
             }
           },
           borderRadius: BorderRadius.circular(AppRadius.large),
-          child: _buildAssignmentCard(item, isSelected, asgProvider.isSelectionMode),
+          child: _buildAssignmentCard(
+            item,
+            isSelected,
+            asgProvider.isSelectionMode,
+          ),
         );
       },
     );
@@ -1087,8 +1092,10 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
               Row(
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: isToday
                           ? AppColors.primaryLight
@@ -1338,8 +1345,9 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.small),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.small,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1378,8 +1386,9 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.small),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.small,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1736,7 +1745,8 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                     const SizedBox(height: 6),
                     InkWell(
                       onTap: () async {
-                        final parsed = DateTime.tryParse(selectedWorkDate) ??
+                        final parsed =
+                            DateTime.tryParse(selectedWorkDate) ??
                             DateTime.now();
                         final picked = await showDatePicker(
                           context: ctx,
@@ -1799,7 +1809,8 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                                     .updateShiftAssignment(
                                       id: item.id,
                                       shiftId: selectedShiftId,
-                                      workDate: selectedWorkDate != item.workDate
+                                      workDate:
+                                          selectedWorkDate != item.workDate
                                           ? selectedWorkDate
                                           : null,
                                     );
@@ -1881,8 +1892,9 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
               ),
               onPressed: () async {
                 Navigator.of(dialogCtx).pop();
-                final success =
-                    await asgProvider.deleteShiftAssignment(item.id);
+                final success = await asgProvider.deleteShiftAssignment(
+                  item.id,
+                );
                 if (context.mounted) {
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -1952,8 +1964,9 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    count > 0 ? AppColors.primary : const Color(0xFFCBD5E1),
+                backgroundColor: count > 0
+                    ? AppColors.primary
+                    : const Color(0xFFCBD5E1),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -1964,9 +1977,9 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
               label: const Text('Ubah Shift'),
               onPressed: count > 0
                   ? () => _showBulkUpdateModal(
-                        context,
-                        asgProvider.selectedAssignmentIds.toList(),
-                      )
+                      context,
+                      asgProvider.selectedAssignmentIds.toList(),
+                    )
                   : null,
             ),
           ],
@@ -2110,8 +2123,9 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                                         content: Text(
                                           '${assignmentIds.length} penugasan shift berhasil diperbarui!',
                                         ),
-                                        backgroundColor:
-                                            const Color(0xFF00652C),
+                                        backgroundColor: const Color(
+                                          0xFF00652C,
+                                        ),
                                       ),
                                     );
                                   } else {
@@ -2185,7 +2199,10 @@ class _ShiftAssignmentListScreenState extends State<ShiftAssignmentListScreen> {
                 Navigator.of(ctx).pop();
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => const BulkAssignmentScreen(),
+                    builder: (_) => BulkAssignmentScreen(
+                      employeeId: emp.id,
+                      selectedDay: day,
+                    ),
                   ),
                 );
               },

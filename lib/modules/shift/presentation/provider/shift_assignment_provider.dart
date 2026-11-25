@@ -12,16 +12,16 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   ShiftAssignmentProvider({ShiftAssignmentRepository? repository})
       : _repository = repository ?? ShiftAssignmentRepositoryImpl() {
-    final monday = _normalizeToMonday(DateTime.now());
-    _weekStartDate = monday;
-    _startDate = _formatYmd(monday);
-    _endDate = _formatYmd(monday.add(const Duration(days: 6)));
+    final sunday = _normalizeToSunday(DateTime.now());
+    _weekStartDate = sunday;
+    _startDate = _formatYmd(sunday);
+    _endDate = _formatYmd(sunday.add(const Duration(days: 6)));
     fetchAssignments();
   }
 
-  static DateTime _normalizeToMonday(DateTime dt) {
+  static DateTime _normalizeToSunday(DateTime dt) {
     final d = DateTime(dt.year, dt.month, dt.day);
-    return d.subtract(Duration(days: d.weekday - 1));
+    return d.subtract(Duration(days: d.weekday % 7));
   }
 
   static String _formatYmd(DateTime dt) {
@@ -124,7 +124,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
   }
 
   void goToToday() {
-    _weekStartDate = _normalizeToMonday(DateTime.now());
+    _weekStartDate = _normalizeToSunday(DateTime.now());
     _startDate = _formatYmd(_weekStartDate);
     _endDate = _formatYmd(_weekStartDate.add(const Duration(days: 6)));
     fetchAssignments(isRefresh: true);
@@ -231,7 +231,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
       _endDate = endDate;
       final dt = DateTime.tryParse(startDate);
       if (dt != null) {
-        _weekStartDate = _normalizeToMonday(dt);
+        _weekStartDate = _normalizeToSunday(dt);
       }
     }
     _selectedShiftId = shiftId;
@@ -243,7 +243,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   /// Reset semua filter ke default periode mingguan
   Future<void> resetFilter() async {
-    _weekStartDate = _normalizeToMonday(DateTime.now());
+    _weekStartDate = _normalizeToSunday(DateTime.now());
     _startDate = _formatYmd(_weekStartDate);
     _endDate = _formatYmd(_weekStartDate.add(const Duration(days: 6)));
     _selectedShiftId = null;

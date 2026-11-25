@@ -1,5 +1,6 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/utils/date_formatter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -17,8 +18,9 @@ import 'bulk_assignment_result_screen.dart';
 /// Menggunakan [ValueNotifier] sepenuhnya untuk reaktivitas lokal tanpa setState.
 class BulkAssignmentScreen extends StatefulWidget {
   final String? employeeId;
+  final DateTime? selectedDay;
 
-  const BulkAssignmentScreen({super.key, this.employeeId});
+  const BulkAssignmentScreen({super.key, this.employeeId, this.selectedDay});
 
   @override
   State<BulkAssignmentScreen> createState() => _BulkAssignmentScreenState();
@@ -33,8 +35,7 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
   );
   late final ValueNotifier<String> _startDateNotifier;
   late final ValueNotifier<String> _endDateNotifier;
-  final ValueNotifier<Set<String>> _selectedEmployeeIdsNotifier =
-      ValueNotifier<Set<String>>({});
+  late final ValueNotifier<Set<String>> _selectedEmployeeIdsNotifier;
 
   @override
   void initState() {
@@ -42,21 +43,23 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     final now = DateTime.now();
     final inFiveDays = now.add(const Duration(days: 4));
 
-    final initialStart =
+    final initialDateStr = widget.selectedDay != null
+        ? DateFormatter.dateTimeToString(widget.selectedDay!, 'yyyy-MM-dd')
+        : null;
+
+    final initialStart = initialDateStr ??
         "${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-    final initialEnd =
+    final initialEnd = initialDateStr ??
         "${inFiveDays.year.toString().padLeft(4, '0')}-${inFiveDays.month.toString().padLeft(2, '0')}-${inFiveDays.day.toString().padLeft(2, '0')}";
 
     _startDateNotifier = ValueNotifier<String>(initialStart);
     _endDateNotifier = ValueNotifier<String>(initialEnd);
+    _selectedEmployeeIdsNotifier = ValueNotifier<Set<String>>(
+      widget.employeeId != null ? {widget.employeeId!} : {},
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _prepopulateDefaults();
-
-      if (widget.employeeId != null) {
-        _selectedEmployeeIdsNotifier.value = {widget.employeeId!};
-      }
-      
     });
   }
 
@@ -116,8 +119,7 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     );
 
     if (picked != null) {
-      final formatted =
-          "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      final formatted = DateFormatter.dateTimeToString(picked, 'yyyy-MM-dd');
       if (isStart) {
         _startDateNotifier.value = formatted;
         // Validasi agar endDate tidak lebih kecil dari startDate
@@ -205,6 +207,12 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
 
     final List<EmployeeProfile> employees = empProvider.employees.isNotEmpty
         ? empProvider.employees
+              .where(
+                (emp) => widget.employeeId == null
+                    ? false
+                    : emp.id == widget.employeeId,
+              )
+              .toList()
         : [];
 
     final List<Shift> activeShifts = shiftProvider.shifts.isNotEmpty
