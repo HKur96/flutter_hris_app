@@ -806,18 +806,27 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
 
 ## 6. Modul 4: Penugasan Shift (`shift_assignments`)
 
-### 6.1. Single Shift Assignment (`POST /api/v1/shift-assignments`)
+### 6.1. Single Shift Assignment (`POST /api/v1/shift-assignments`) — [NONAKTIF / DISABLED]
+
+> [!WARNING]
+> Endpoint pembuatan penugasan shift satuan telah dinonaktifkan (`405 Method Not Allowed`) sesuai kebijakan arsitektur sistem. Seluruh pembuatan jadwal penugasan shift wajib dilakukan via **Bulk Shift Assignment** (`POST /api/v1/shift-assignments/bulk`).
 
 - **Method:** `POST`
 - **Path:** `/api/v1/shift-assignments`
-- **Role:** `OWNER`, `ADMIN`
-- **Request Payload:**
+- **Status Response:** `405 Method Not Allowed`
+- **Contoh Error Response:**
   ```json
   {
-    "auth_token": "<JWT_TOKEN>",
-    "employee_id": "e4b5f8c2-3e44-4f81-a589-918237461234",
-    "shift_id": "33333333-4444-4555-8666-777777777777",
-    "work_date": "2026-11-21"
+    "success": false,
+    "status": 405,
+    "error": {
+      "code": "METHOD_NOT_ALLOWED",
+      "message": "Single shift assignment is disabled. Please use POST /api/v1/shift-assignments/bulk to assign shifts.",
+      "details": null
+    },
+    "meta": {
+      "timestamp": "2026-11-25T08:49:32.082Z"
+    }
   }
   ```
 
@@ -825,49 +834,195 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
 
 ### 6.2. Bulk Shift Assignment (`POST /api/v1/shift-assignments/bulk`)
 
+Mendukung penugasan shift untuk banyak karyawan sekaligus atau rentang tanggal, dengan **aturan pencegahan bentrok jam kerja (_Time Overlap Guard_)**. Karyawan diperbolehkan memiliki lebih dari satu shift (_double shift_) pada hari yang sama selama jam kerja shift tidak saling tumpang tindih (misal Shift Pagi `08:00–16:00` dan Shift Malam/Siang `17:00–01:00`).
+
 - **Method:** `POST`
 - **Path:** `/api/v1/shift-assignments/bulk`
-- **Role:** `OWNER`, `ADMIN`
-- **Request Payload:**
+- **Role:** `OWNER`, `ADMIN`, `MANAGER`
+- **Format Payload 1: Rentang Tanggal & Daftar Karyawan**
   ```json
   {
     "auth_token": "<JWT_TOKEN>",
-    "shift_id": "33333333-4444-4555-8666-777777777777",
-    "start_date": "2026-11-21",
-    "end_date": "2026-11-25",
-    "employee_ids": [
-      "e4b5f8c2-3e44-4f81-a589-918237461234",
-      "f5a6b7c8-9012-4345-8678-9abcdef01234"
+    "shift_id": "22ef2402-2e1c-4ad4-a59a-d3d840b18022",
+    "start_date": "2026-11-25",
+    "end_date": "2026-11-29",
+    "employee_ids": ["2f2587ab-b2c0-4224-a57a-62382af0c7ff"]
+  }
+  ```
+- **Format Payload 2: Array Penugasan Langsung**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "assignments": [
+      {
+        "employee_id": "2f2587ab-b2c0-4224-a57a-62382af0c7ff",
+        "shift_id": "22ef2402-2e1c-4ad4-a59a-d3d840b18022",
+        "work_date": "2026-11-25"
+      }
     ]
   }
   ```
-- **Contoh Response (201):**
+- **Contoh Response Berhasil (201 Created):**
   ```json
   {
     "success": true,
     "status": 201,
     "data": {
-      "count": 10,
-      "totalDays": 5,
-      "totalEmployees": 2
+      "count": 5,
+      "assigned_ids": ["dc041e7e-fa2c-4a0d-9332-65484d81ddee"],
+      "total_days": 5,
+      "total_employees": 1
+    },
+    "meta": {
+      "message": "Bulk shift assignment completed: 5 shifts assigned",
+      "timestamp": "2026-11-25T08:52:58.480Z"
+    }
+  }
+  ```
+- **Contoh Response Bentrok Waktu (409 Conflict):**
+  ```json
+  {
+    "success": false,
+    "status": 409,
+    "error": {
+      "code": "SHIFT_TIME_OVERLAP",
+      "message": "Jadwal bentrok untuk karyawan 'Kur test 1' pada tanggal 2026-11-25: Shift 'Shift Malam' (02:00-10:00) bertabrakan dengan shift 'Shift Pagi' (08:00-16:00). Double shift diperbolehkan hanya jika jam kerja tidak bentrok.",
+      "details": null
+    },
+    "meta": {
+      "timestamp": "2026-11-25T08:51:08.556Z"
     }
   }
   ```
 
 ---
 
-### 6.3. List Shift Assignments (`GET /api/v1/shift-assignments`)
+### 6.3. Ubah Penugasan Shift Massal (`PUT /api/v1/shift-assignments/bulk` & `POST /api/v1/shift-assignments/bulk-update`)
+
+Memperbarui jadwal shift secara massal untuk kumpulan ID penugasan atau berdasarkan kombinasi rentang tanggal dan filter karyawan. Sistem memvalidasi bahwa jadwal shift yang baru tidak bertabrakan dengan penugasan lain yang tidak ikut diubah.
+
+- **Method:** `PUT` (atau `POST` dengan `_method: "PUT"`, atau `POST /api/v1/shift-assignments/bulk-update`)
+- **Path:** `/api/v1/shift-assignments/bulk`
+- **Role:** `OWNER`, `ADMIN`, `MANAGER`
+- **Skenario A: Update Berdasarkan Rentang Tanggal & Karyawan**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "_method": "PUT",
+    "shift_id": "9b8da645-8e8d-4d5f-83fc-2c68303b36e4",
+    "start_date": "2026-11-25",
+    "end_date": "2026-11-29",
+    "employee_ids": ["2f2587ab-b2c0-4224-a57a-62382af0c7ff"],
+    "old_shift_id": "22ef2402-2e1c-4ad4-a59a-d3d840b18022" // Opsional: hanya ganti shift tertentu
+  }
+  ```
+- **Skenario B: Update Berdasarkan Kumpulan Assignment ID**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "_method": "PUT",
+    "shift_id": "9b8da645-8e8d-4d5f-83fc-2c68303b36e4",
+    "assignment_ids": ["86f0a569-720f-46b4-bfbe-b1f131fb9202"]
+  }
+  ```
+  _(Catatan: Properti `shift_id` atau `new_shift_id` keduanya didukung)._
+- **Contoh Response Berhasil (200 OK):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "count": 1,
+      "updated_ids": ["86f0a569-720f-46b4-bfbe-b1f131fb9202"],
+      "new_shift_id": "9b8da645-8e8d-4d5f-83fc-2c68303b36e4",
+      "new_shift_name": "Shift Malam"
+    },
+    "meta": {
+      "message": "Bulk shift assignment updated: 1 shifts modified",
+      "timestamp": "2026-11-25T08:52:45.164Z"
+    }
+  }
+  ```
+
+---
+
+### 6.4. Ubah Penugasan Shift Satuan (`PUT /api/v1/shift-assignments/:id`)
+
+Memperbarui `shift_id` dan/atau `work_date` pada satu baris penugasan shift tertentu dengan validasi bentrok jam kerja terhadap shift lain milik karyawan tersebut.
+
+- **Method:** `PUT` (atau `POST /api/v1/shift-assignments/:id` dengan `_method: "PUT"`)
+- **Path:** `/api/v1/shift-assignments/:id`
+- **Role:** `OWNER`, `ADMIN`, `MANAGER`
+- **Request Payload:**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "_method": "PUT",
+    "shift_id": "9b8da645-8e8d-4d5f-83fc-2c68303b36e4",
+    "work_date": "2026-11-26" // Opsional: jika ingin memindahkan tanggal kerja
+  }
+  ```
+- **Contoh Response Berhasil (200 OK):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "id": "86f0a569-720f-46b4-bfbe-b1f131fb9202",
+      "employee_id": "2f2587ab-b2c0-4224-a57a-62382af0c7ff",
+      "shift_id": "9b8da645-8e8d-4d5f-83fc-2c68303b36e4",
+      "work_date": "2026-11-26",
+      "assigned_by": "a2cc35eb-a47b-4e8a-b2a0-ffe62dbe9464",
+      "created_at": "2026-11-25T07:33:46.742Z",
+      "employee_name": "Kur test 1",
+      "nik": "3578240407960001",
+      "shift_name": "Shift Malam",
+      "start_time": "02:00",
+      "end_time": "10:00"
+    },
+    "meta": {
+      "message": "Shift assignment updated successfully",
+      "timestamp": "2026-11-25T08:51:09.013Z"
+    }
+  }
+  ```
+
+---
+
+### 6.5. List Shift Assignments (`GET /api/v1/shift-assignments`)
 
 - **Method:** `GET`
 - **Path:** `/api/v1/shift-assignments`
-- **Role:** `OWNER`, `ADMIN`, `EMPLOYEE` (Karyawan hanya dapat melihat jadwal miliknya)
+- **Role:** `OWNER`, `ADMIN`, `MANAGER`, `EMPLOYEE` (Karyawan dibatasi hanya dapat melihat jadwal miliknya)
 - **Query Parameters:**
-  - `employee_id` (opsional untuk Admin)
+  - `employee_id` (opsional untuk Admin/Owner/Manager)
   - `shift_id` (opsional)
   - `start_date` (opsional, `YYYY-MM-DD`)
   - `end_date` (opsional, `YYYY-MM-DD`)
   - `limit` (opsional, default 50)
   - `offset` (opsional, default 0)
+
+---
+
+### 6.6. Hapus Penugasan Shift (`DELETE /api/v1/shift-assignments/:id`)
+
+- **Method:** `DELETE` (atau `POST /api/v1/shift-assignments/:id` dengan `_method: "DELETE"`)
+- **Path:** `/api/v1/shift-assignments/:id`
+- **Role:** `OWNER`, `ADMIN`, `MANAGER`
+- **Contoh Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "id": "dc041e7e-fa2c-4a0d-9332-65484d81ddee"
+    },
+    "meta": {
+      "message": "Shift assignment removed successfully",
+      "timestamp": "2026-11-25T08:52:58.866Z"
+    }
+  }
+  ```
 
 ---
 

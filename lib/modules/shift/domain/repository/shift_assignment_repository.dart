@@ -27,4 +27,24 @@ abstract class ShiftAssignmentRepository {
     String? endTime,
     bool? isOvernight,
   });
+
+  /// Memperbarui satu penugasan shift (Modul 4.4: PUT /api/v1/shift-assignments/:id)
+  Future<Either<BaseException, ShiftAssignment>> updateShiftAssignment({
+    required String id,
+    required String shiftId,
+    String? workDate,
+  });
+
+  /// Menghapus satu penugasan shift (Modul 4.6: DELETE /api/v1/shift-assignments/:id)
+  Future<Either<BaseException, String>> deleteShiftAssignment(String id);
+
+  /// Memperbarui penugasan shift massal (Modul 4.3: PUT /api/v1/shift-assignments/bulk)
+  Future<Either<BaseException, BulkUpdateResult>> updateBulkAssignment({
+    required String shiftId,
+    List<String>? assignmentIds,
+    String? startDate,
+    String? endDate,
+    List<String>? employeeIds,
+    String? oldShiftId,
+  });
 }

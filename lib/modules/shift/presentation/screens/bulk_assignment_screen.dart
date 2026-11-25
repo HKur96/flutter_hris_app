@@ -14,8 +14,11 @@ import 'bulk_assignment_result_screen.dart';
 /// Form Penugasan Shift Massal (Stitch Mockup 04 & 07)
 /// Menerapkan 1 template shift ke beberapa karyawan sekaligus untuk rentang tanggal (POST /api/v1/shift-assignments/bulk).
 /// Dilengkapi kalkulasi simulasi entri (Hari x Karyawan) dan checklist multi-pilihan.
+/// Menggunakan [ValueNotifier] sepenuhnya untuk reaktivitas lokal tanpa setState.
 class BulkAssignmentScreen extends StatefulWidget {
-  const BulkAssignmentScreen({super.key});
+  final String? employeeId;
+
+  const BulkAssignmentScreen({super.key, this.employeeId});
 
   @override
   State<BulkAssignmentScreen> createState() => _BulkAssignmentScreenState();
@@ -24,15 +27,14 @@ class BulkAssignmentScreen extends StatefulWidget {
 class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  String? _selectedShiftId;
-  String? _selectedShiftName;
-  String? _selectedStartTime;
-  String? _selectedEndTime;
-  bool _selectedIsOvernight = false;
-
-  late String _startDate;
-  late String _endDate;
-  final Set<String> _selectedEmployeeIds = {};
+  // State Management Lokal menggunakan ValueNotifier (Zero setState)
+  final ValueNotifier<Shift?> _selectedShiftNotifier = ValueNotifier<Shift?>(
+    null,
+  );
+  late final ValueNotifier<String> _startDateNotifier;
+  late final ValueNotifier<String> _endDateNotifier;
+  final ValueNotifier<Set<String>> _selectedEmployeeIdsNotifier =
+      ValueNotifier<Set<String>>({});
 
   @override
   void initState() {
@@ -40,45 +42,45 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     final now = DateTime.now();
     final inFiveDays = now.add(const Duration(days: 4));
 
-    _startDate =
+    final initialStart =
         "${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-    _endDate =
+    final initialEnd =
         "${inFiveDays.year.toString().padLeft(4, '0')}-${inFiveDays.month.toString().padLeft(2, '0')}-${inFiveDays.day.toString().padLeft(2, '0')}";
+
+    _startDateNotifier = ValueNotifier<String>(initialStart);
+    _endDateNotifier = ValueNotifier<String>(initialEnd);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _prepopulateDefaults();
+
+      if (widget.employeeId != null) {
+        _selectedEmployeeIdsNotifier.value = {widget.employeeId!};
+      }
+      
     });
+  }
+
+  @override
+  void dispose() {
+    _selectedShiftNotifier.dispose();
+    _startDateNotifier.dispose();
+    _endDateNotifier.dispose();
+    _selectedEmployeeIdsNotifier.dispose();
+    super.dispose();
   }
 
   void _prepopulateDefaults() {
     final shiftProvider = context.read<ShiftProvider>();
     final activeShifts = shiftProvider.shifts.where((s) => s.isActive).toList();
-    if (activeShifts.isNotEmpty && _selectedShiftId == null) {
-      final firstShift = activeShifts.first;
-      setState(() {
-        _selectedShiftId = firstShift.id;
-        _selectedShiftName = firstShift.name;
-        _selectedStartTime = firstShift.startTime;
-        _selectedEndTime = firstShift.endTime;
-        _selectedIsOvernight = firstShift.isCrossDayOvernight;
-      });
-    }
-
-    // Default checklist: pilih 2 karyawan awal jika ada
-    final empProvider = context.read<EmployeeManagementProvider>();
-    if (empProvider.employees.isNotEmpty && _selectedEmployeeIds.isEmpty) {
-      setState(() {
-        _selectedEmployeeIds.addAll(
-          empProvider.employees.take(2).map((e) => e.id),
-        );
-      });
+    if (activeShifts.isNotEmpty && _selectedShiftNotifier.value == null) {
+      _selectedShiftNotifier.value = activeShifts.first;
     }
   }
 
-  int get _calculatedDays {
+  static int _getCalculatedDays(String startStr, String endStr) {
     try {
-      final s = DateTime.parse(_startDate);
-      final e = DateTime.parse(_endDate);
+      final s = DateTime.parse(startStr);
+      final e = DateTime.parse(endStr);
       final diff = e.difference(s).inDays + 1;
       return diff > 0 ? diff : 1;
     } catch (_) {
@@ -86,10 +88,10 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     }
   }
 
-  int get _estimatedEntries => _calculatedDays * _selectedEmployeeIds.length;
-
   Future<void> _pickDate({required bool isStart}) async {
-    final currentStr = isStart ? _startDate : _endDate;
+    final currentStr = isStart
+        ? _startDateNotifier.value
+        : _endDateNotifier.value;
     final current = DateTime.tryParse(currentStr) ?? DateTime.now();
 
     final picked = await showDatePicker(
@@ -116,27 +118,26 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     if (picked != null) {
       final formatted =
           "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-      setState(() {
-        if (isStart) {
-          _startDate = formatted;
-          // Validasi agar endDate tidak lebih kecil dari startDate
-          if (_endDate.compareTo(_startDate) < 0) {
-            _endDate = _startDate;
-          }
-        } else {
-          _endDate = formatted;
-          if (_endDate.compareTo(_startDate) < 0) {
-            _startDate = _endDate;
-          }
+      if (isStart) {
+        _startDateNotifier.value = formatted;
+        // Validasi agar endDate tidak lebih kecil dari startDate
+        if (_endDateNotifier.value.compareTo(_startDateNotifier.value) < 0) {
+          _endDateNotifier.value = _startDateNotifier.value;
         }
-      });
+      } else {
+        _endDateNotifier.value = formatted;
+        if (_endDateNotifier.value.compareTo(_startDateNotifier.value) < 0) {
+          _startDateNotifier.value = _endDateNotifier.value;
+        }
+      }
     }
   }
 
   Future<void> _submitBulkAssignment(List<EmployeeProfile> allEmployees) async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_selectedShiftId == null) {
+    final selectedShift = _selectedShiftNotifier.value;
+    if (selectedShift == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Silakan pilih template shift terlebih dahulu.'),
@@ -146,7 +147,8 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
       return;
     }
 
-    if (_selectedEmployeeIds.isEmpty) {
+    final selectedEmpIds = _selectedEmployeeIdsNotifier.value;
+    if (selectedEmpIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pilih setidaknya 1 karyawan untuk penugasan massal.'),
@@ -157,26 +159,24 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
     }
 
     final selectedNames = allEmployees
-        .where((e) => _selectedEmployeeIds.contains(e.id))
+        .where((e) => selectedEmpIds.contains(e.id))
         .map((e) => e.name)
         .toList();
 
     final asgProvider = context.read<ShiftAssignmentProvider>();
     final result = await asgProvider.createBulkAssignment(
-      shiftId: _selectedShiftId!,
-      startDate: _startDate,
-      endDate: _endDate,
-      employeeIds: _selectedEmployeeIds.toList(),
+      shiftId: selectedShift.id,
+      startDate: _startDateNotifier.value,
+      endDate: _endDateNotifier.value,
+      employeeIds: selectedEmpIds.toList(),
       employeeNames: selectedNames,
-      shiftName: _selectedShiftName,
-      startTime: _selectedStartTime,
-      endTime: _selectedEndTime,
-      isOvernight: _selectedIsOvernight,
+      shiftName: selectedShift.name,
+      startTime: selectedShift.startTime,
+      endTime: selectedShift.endTime,
+      isOvernight: selectedShift.isCrossDayOvernight,
     );
 
     if (!mounted) return;
-
-    print('opo jink $result');
 
     if (result != null) {
       // Navigasi langsung ke Screen 05 (Hasil Penugasan Massal)
@@ -271,54 +271,55 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.medium),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: _selectedShiftId,
-                            hint: Text(
-                              'Pilih Shift',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: AppColors.textMuted,
+                      ValueListenableBuilder<Shift?>(
+                        valueListenable: _selectedShiftNotifier,
+                        builder: (context, selectedShift, _) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.medium,
+                              ),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedShift?.id,
+                                hint: Text(
+                                  'Pilih Shift',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                                items: activeShifts.map((s) {
+                                  return DropdownMenuItem<String>(
+                                    value: s.id,
+                                    child: Text(
+                                      '${s.name} (${s.startTime} - ${s.endTime})',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    final s = activeShifts.firstWhere(
+                                      (item) => item.id == val,
+                                    );
+                                    _selectedShiftNotifier.value = s;
+                                  }
+                                },
                               ),
                             ),
-                            items: activeShifts.map((s) {
-                              return DropdownMenuItem<String>(
-                                value: s.id,
-                                child: Text(
-                                  '${s.name} (${s.startTime} - ${s.endTime})',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                final s = activeShifts.firstWhere(
-                                  (item) => item.id == val,
-                                );
-                                setState(() {
-                                  _selectedShiftId = s.id;
-                                  _selectedShiftName = s.name;
-                                  _selectedStartTime = s.startTime;
-                                  _selectedEndTime = s.endTime;
-                                  _selectedIsOvernight = s.isCrossDayOvernight;
-                                });
-                              }
-                            },
-                          ),
-                        ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
 
@@ -361,13 +362,18 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          _startDate,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                        ValueListenableBuilder<String>(
+                                          valueListenable: _startDateNotifier,
+                                          builder: (context, startDate, _) {
+                                            return Text(
+                                              startDate,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                            );
+                                          },
                                         ),
                                         const Icon(
                                           Icons.calendar_month_rounded,
@@ -418,13 +424,18 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          _endDate,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
-                                          ),
+                                        ValueListenableBuilder<String>(
+                                          valueListenable: _endDateNotifier,
+                                          builder: (context, endDate, _) {
+                                            return Text(
+                                              endDate,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.textPrimary,
+                                              ),
+                                            );
+                                          },
                                         ),
                                         const Icon(
                                           Icons.calendar_month_rounded,
@@ -443,193 +454,238 @@ class _BulkAssignmentScreenState extends State<BulkAssignmentScreen> {
                       const SizedBox(height: 16),
 
                       // Field 3: Multi-Employee Checklist Selector
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
+                      ValueListenableBuilder<Set<String>>(
+                        valueListenable: _selectedEmployeeIdsNotifier,
+                        builder: (context, selectedIds, _) {
+                          return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Pilih Karyawan',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Pilih Karyawan',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${selectedIds.length} Terpilih',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  GestureDetector(
+                                    onTap: () {
+                                      if (selectedIds.length ==
+                                          employees.length) {
+                                        _selectedEmployeeIdsNotifier.value =
+                                            <String>{};
+                                      } else {
+                                        _selectedEmployeeIdsNotifier.value =
+                                            employees.map((e) => e.id).toSet();
+                                      }
+                                    },
+                                    child: Text(
+                                      selectedIds.length == employees.length
+                                          ? 'Batal Semua'
+                                          : 'Pilih Semua',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.primary,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                '${_selectedEmployeeIds.length} Terpilih',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
+                              const SizedBox(height: 8),
+
+                              // List Container Karyawan dengan Checkbox
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.medium,
+                                  ),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: employees.length,
+                                  separatorBuilder: (context, index) =>
+                                      const Divider(
+                                        height: 1,
+                                        color: AppColors.border,
+                                      ),
+                                  itemBuilder: (context, index) {
+                                    final emp = employees[index];
+                                    final isChecked = selectedIds.contains(
+                                      emp.id,
+                                    );
+
+                                    return InkWell(
+                                      onTap: () {
+                                        final newSet = Set<String>.from(
+                                          selectedIds,
+                                        );
+                                        if (isChecked) {
+                                          newSet.remove(emp.id);
+                                        } else {
+                                          newSet.add(emp.id);
+                                        }
+                                        _selectedEmployeeIdsNotifier.value =
+                                            newSet;
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
+                                        ),
+                                        color: isChecked
+                                            ? const Color(0xFFF0FDF4)
+                                            : Colors.transparent,
+                                        child: Row(
+                                          children: [
+                                            Checkbox(
+                                              value: isChecked,
+                                              activeColor: AppColors.primary,
+                                              onChanged: (val) {
+                                                final newSet = Set<String>.from(
+                                                  selectedIds,
+                                                );
+                                                if (val == true) {
+                                                  newSet.add(emp.id);
+                                                } else {
+                                                  newSet.remove(emp.id);
+                                                }
+                                                _selectedEmployeeIdsNotifier
+                                                        .value =
+                                                    newSet;
+                                              },
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    emp.name,
+                                                    style:
+                                                        GoogleFonts.plusJakartaSans(
+                                                          fontSize: 12.5,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: AppColors
+                                                              .textPrimary,
+                                                        ),
+                                                  ),
+                                                  const SizedBox(height: 1),
+                                                  Text(
+                                                    '${emp.position} • ${emp.department}',
+                                                    style: GoogleFonts.inter(
+                                                      fontSize: 11,
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Text(
+                                              emp.nik,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 10.5,
+                                                color: AppColors.textMuted,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (_selectedEmployeeIds.length ==
-                                    employees.length) {
-                                  _selectedEmployeeIds.clear();
-                                } else {
-                                  _selectedEmployeeIds.addAll(
-                                    employees.map((e) => e.id),
-                                  );
-                                }
-                              });
-                            },
-                            child: Text(
-                              _selectedEmployeeIds.length == employees.length
-                                  ? 'Batal Semua'
-                                  : 'Pilih Semua',
-                              style: GoogleFonts.inter(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      // List Container Karyawan dengan Checkbox
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.medium),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: employees.length,
-                          separatorBuilder: (context, index) =>
-                              const Divider(height: 1, color: AppColors.border),
-                          itemBuilder: (context, index) {
-                            final emp = employees[index];
-                            final isChecked = _selectedEmployeeIds.contains(
-                              emp.id,
-                            );
-
-                            return InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (isChecked) {
-                                    _selectedEmployeeIds.remove(emp.id);
-                                  } else {
-                                    _selectedEmployeeIds.add(emp.id);
-                                  }
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                color: isChecked
-                                    ? const Color(0xFFF0FDF4)
-                                    : Colors.transparent,
-                                child: Row(
-                                  children: [
-                                    Checkbox(
-                                      value: isChecked,
-                                      activeColor: AppColors.primary,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          if (val == true) {
-                                            _selectedEmployeeIds.add(emp.id);
-                                          } else {
-                                            _selectedEmployeeIds.remove(emp.id);
-                                          }
-                                        });
-                                      },
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            emp.name,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 12.5,
-                                              fontWeight: FontWeight.w700,
-                                              color: AppColors.textPrimary,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 1),
-                                          Text(
-                                            '${emp.position} • ${emp.department}',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 11,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Text(
-                                      emp.nik,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 10.5,
-                                        color: AppColors.textMuted,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
 
                       // Summary Calculation Preview (Hari x Karyawan = Total Entri)
-                      DottedBorder(
-                        options: RoundedRectDottedBorderOptions(
-                          radius: const Radius.circular(AppRadius.medium),
-                          strokeWidth: 0.6,
-                          color: Colors.grey,
-                          dashPattern: const [6, 4],
-                          strokeCap: StrokeCap.round,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(
-                              AppRadius.medium,
+                      ListenableBuilder(
+                        listenable: Listenable.merge([
+                          _startDateNotifier,
+                          _endDateNotifier,
+                          _selectedEmployeeIdsNotifier,
+                        ]),
+                        builder: (context, _) {
+                          final days = _getCalculatedDays(
+                            _startDateNotifier.value,
+                            _endDateNotifier.value,
+                          );
+                          final totalEmployees =
+                              _selectedEmployeeIdsNotifier.value.length;
+                          final estimatedEntries = days * totalEmployees;
+
+                          return DottedBorder(
+                            options: RoundedRectDottedBorderOptions(
+                              radius: const Radius.circular(AppRadius.medium),
+                              strokeWidth: 0.6,
+                              color: Colors.grey,
+                              dashPattern: const [6, 4],
+                              strokeCap: StrokeCap.round,
                             ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildPreviewRow(
-                                label: 'Rentang Waktu:',
-                                value: '$_calculatedDays Hari',
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.medium,
+                                ),
                               ),
-                              const SizedBox(height: 6),
-                              _buildPreviewRow(
-                                label: 'Total Karyawan:',
-                                value:
-                                    '${_selectedEmployeeIds.length} Karyawan',
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildPreviewRow(
+                                    label: 'Rentang Waktu:',
+                                    value: '$days Hari',
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _buildPreviewRow(
+                                    label: 'Total Karyawan:',
+                                    value: '$totalEmployees Karyawan',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Divider(
+                                    height: 1,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _buildPreviewRow(
+                                    label: 'Perkiraan Entri Shift:',
+                                    value: '$estimatedEntries Penugasan Baru',
+                                    isHighlight: true,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              Divider(height: 1, color: Colors.grey.shade400),
-                              const SizedBox(height: 8),
-                              _buildPreviewRow(
-                                label: 'Perkiraan Entri Shift:',
-                                value: '$_estimatedEntries Penugasan Baru',
-                                isHighlight: true,
-                              ),
-                            ],
-                          ),
-                        ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

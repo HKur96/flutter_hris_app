@@ -124,4 +124,137 @@ class ShiftAssignmentRepositoryImpl implements ShiftAssignmentRepository {
       return Left(DataException(e.toString()));
     }
   }
+
+  @override
+  Future<Either<BaseException, ShiftAssignment>> updateShiftAssignment({
+    required String id,
+    required String shiftId,
+    String? workDate,
+  }) async {
+    try {
+      final token = await AppSecureStorage().readToken();
+      final payload = <String, dynamic>{
+        'auth_token': token,
+        '_method': 'PUT',
+        'shift_id': shiftId,
+        'work_date': ?workDate,
+      };
+
+      final response = await _dioHelper.putRequest(
+        'api/v1/shift-assignments/$id',
+        requestBody: payload,
+      );
+
+      final dynamic raw = response.data is String
+          ? jsonDecode(response.data as String)
+          : response.data;
+
+      final res = BaseResponse<Map<String, dynamic>>.fromJson(
+        raw as Map<String, dynamic>,
+        fromJsonT: (json) => json as Map<String, dynamic>,
+      );
+
+      if (res.data == null) {
+        return Left(DataException('Data penugasan shift kosong'));
+      }
+
+      final item = ShiftAssignmentModel.fromJson(res.data!);
+      return Right(item);
+    } on DioException catch (e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
+    } catch (e) {
+      return Left(DataException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<BaseException, String>> deleteShiftAssignment(String id) async {
+    try {
+      final token = await AppSecureStorage().readToken();
+      final payload = <String, dynamic>{
+        'auth_token': token,
+        '_method': 'DELETE',
+      };
+
+      final response = await _dioHelper.deleteRequest(
+        'api/v1/shift-assignments/$id',
+        requestBody: payload,
+      );
+
+      final dynamic raw = response.data is String
+          ? jsonDecode(response.data as String)
+          : response.data;
+
+      final res = BaseResponse<Map<String, dynamic>>.fromJson(
+        raw as Map<String, dynamic>,
+        fromJsonT: (json) => json as Map<String, dynamic>,
+      );
+
+      final deletedId = res.data?['id']?.toString() ?? id;
+      return Right(deletedId);
+    } on DioException catch (e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
+    } catch (e) {
+      return Left(DataException(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<BaseException, BulkUpdateResult>> updateBulkAssignment({
+    required String shiftId,
+    List<String>? assignmentIds,
+    String? startDate,
+    String? endDate,
+    List<String>? employeeIds,
+    String? oldShiftId,
+  }) async {
+    try {
+      final token = await AppSecureStorage().readToken();
+      final payload = <String, dynamic>{
+        'auth_token': token,
+        '_method': 'PUT',
+        'shift_id': shiftId,
+        'assignment_ids': ?assignmentIds,
+        'start_date': ?startDate,
+        'end_date': ?endDate,
+        'employee_ids': ?employeeIds,
+        'old_shift_id': ?oldShiftId,
+      };
+
+      final response = await _dioHelper.putRequest(
+        'api/v1/shift-assignments/bulk',
+        requestBody: payload,
+      );
+
+      final dynamic raw = response.data is String
+          ? jsonDecode(response.data as String)
+          : response.data;
+
+      final res = BaseResponse<Map<String, dynamic>>.fromJson(
+        raw as Map<String, dynamic>,
+        fromJsonT: (json) => json as Map<String, dynamic>,
+      );
+
+      final data = res.data ?? {};
+      final count = (data['count'] as num?)?.toInt() ??
+          (assignmentIds?.length ?? 0);
+      final rawUpdatedIds = data['updated_ids'] as List<dynamic>? ?? [];
+      final updatedIds = rawUpdatedIds.map((e) => e.toString()).toList();
+      final newShiftId = data['new_shift_id']?.toString() ?? shiftId;
+      final newShiftName = data['new_shift_name']?.toString();
+
+      return Right(
+        BulkUpdateResult(
+          count: count,
+          updatedIds: updatedIds,
+          newShiftId: newShiftId,
+          newShiftName: newShiftName,
+        ),
+      );
+    } on DioException catch (e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
+    } catch (e) {
+      return Left(DataException(e.toString()));
+    }
+  }
 }

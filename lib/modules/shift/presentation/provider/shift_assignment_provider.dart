@@ -5,22 +5,134 @@ import '../../domain/repository/shift_assignment_repository.dart';
 import '../../data/repository/shift_assignment_repository_impl.dart';
 
 /// Provider State Management untuk Penugasan Shift (Shift Assignments)
-/// Mengatur daftar roster, filter tanggal/shift/karyawan, deteksi konflik, dan eksekusi form tunggal & massal.
+/// Mengatur daftar roster, filter tanggal/shift/karyawan, deteksi konflik,
+/// navigasi mingguan (Grid Matrix), mode seleksi massal, dan mutasi data (update/delete).
 class ShiftAssignmentProvider with ChangeNotifier {
   final ShiftAssignmentRepository _repository;
 
   ShiftAssignmentProvider({ShiftAssignmentRepository? repository})
-    : _repository = repository ?? ShiftAssignmentRepositoryImpl() {
+      : _repository = repository ?? ShiftAssignmentRepositoryImpl() {
+    final monday = _normalizeToMonday(DateTime.now());
+    _weekStartDate = monday;
+    _startDate = _formatYmd(monday);
+    _endDate = _formatYmd(monday.add(const Duration(days: 6)));
     fetchAssignments();
+  }
+
+  static DateTime _normalizeToMonday(DateTime dt) {
+    final d = DateTime(dt.year, dt.month, dt.day);
+    return d.subtract(Duration(days: d.weekday - 1));
+  }
+
+  static String _formatYmd(DateTime dt) {
+    final y = dt.year.toString().padLeft(4, '0');
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   List<ShiftAssignment> _assignments = [];
   bool _isLoading = false;
   String? _errorMessage;
 
+  // View Mode: Matriks Grid vs Kartu
+  bool _isMatrixView = true;
+  bool get isMatrixView => _isMatrixView;
+
+  void setMatrixView(bool value) {
+    if (_isMatrixView != value) {
+      _isMatrixView = value;
+      notifyListeners();
+    }
+  }
+
+  // Multi-Selection Mode untuk Ubah Penugasan Massal
+  bool _isSelectionMode = false;
+  final Set<String> _selectedAssignmentIds = {};
+
+  bool get isSelectionMode => _isSelectionMode;
+  Set<String> get selectedAssignmentIds => _selectedAssignmentIds;
+  int get selectedCount => _selectedAssignmentIds.length;
+
+  void toggleSelectionMode() {
+    _isSelectionMode = !_isSelectionMode;
+    if (!_isSelectionMode) {
+      _selectedAssignmentIds.clear();
+    }
+    notifyListeners();
+  }
+
+  void toggleAssignmentSelection(String assignmentId) {
+    if (_selectedAssignmentIds.contains(assignmentId)) {
+      _selectedAssignmentIds.remove(assignmentId);
+    } else {
+      _selectedAssignmentIds.add(assignmentId);
+    }
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedAssignmentIds.clear();
+    _isSelectionMode = false;
+    notifyListeners();
+  }
+
+  // Week Navigation State
+  late DateTime _weekStartDate;
+  DateTime get weekStartDate => _weekStartDate;
+  List<DateTime> get weekDays =>
+      List.generate(7, (i) => _weekStartDate.add(Duration(days: i)));
+
+  String get weekRangeLabel {
+    final start = _weekStartDate;
+    final end = _weekStartDate.add(const Duration(days: 6));
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
+    if (start.month == end.month && start.year == end.year) {
+      return '${start.day.toString().padLeft(2, '0')} - ${end.day.toString().padLeft(2, '0')} ${months[start.month - 1]} ${start.year}';
+    } else if (start.year == end.year) {
+      return '${start.day.toString().padLeft(2, '0')} ${months[start.month - 1]} - ${end.day.toString().padLeft(2, '0')} ${months[end.month - 1]} ${start.year}';
+    } else {
+      return '${start.day.toString().padLeft(2, '0')} ${months[start.month - 1]} ${start.year} - ${end.day.toString().padLeft(2, '0')} ${months[end.month - 1]} ${end.year}';
+    }
+  }
+
+  void nextWeek() {
+    _weekStartDate = _weekStartDate.add(const Duration(days: 7));
+    _startDate = _formatYmd(_weekStartDate);
+    _endDate = _formatYmd(_weekStartDate.add(const Duration(days: 6)));
+    fetchAssignments(isRefresh: true);
+  }
+
+  void prevWeek() {
+    _weekStartDate = _weekStartDate.subtract(const Duration(days: 7));
+    _startDate = _formatYmd(_weekStartDate);
+    _endDate = _formatYmd(_weekStartDate.add(const Duration(days: 6)));
+    fetchAssignments(isRefresh: true);
+  }
+
+  void goToToday() {
+    _weekStartDate = _normalizeToMonday(DateTime.now());
+    _startDate = _formatYmd(_weekStartDate);
+    _endDate = _formatYmd(_weekStartDate.add(const Duration(days: 6)));
+    fetchAssignments(isRefresh: true);
+  }
+
   // Filter Parameters (Mockup 01 & 02)
-  String? _startDate = '2026-11-21';
-  String? _endDate = '2026-11-27';
+  String? _startDate;
+  String? _endDate;
   String? _selectedShiftId;
   String? _selectedShiftName;
   String? _selectedEmployeeId;
@@ -41,9 +153,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   bool get hasActiveFilter =>
       _selectedShiftId != null ||
-      _selectedEmployeeId != null ||
-      _startDate != null ||
-      _endDate != null;
+      _selectedEmployeeId != null;
 
   /// Label rentang tanggal untuk Quick Date Range Bar (Mockup 01)
   String get activeDateRangeLabel {
@@ -80,7 +190,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
     }
   }
 
-  /// Mengambil daftar penugasan shift dari backend / fallback repository
+  /// Mengambil daftar penugasan shift dari backend / repository
   Future<void> fetchAssignments({bool isRefresh = false}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -116,8 +226,14 @@ class ShiftAssignmentProvider with ChangeNotifier {
     String? employeeId,
     String? employeeName,
   }) async {
-    _startDate = startDate;
-    _endDate = endDate;
+    if (startDate != null && endDate != null) {
+      _startDate = startDate;
+      _endDate = endDate;
+      final dt = DateTime.tryParse(startDate);
+      if (dt != null) {
+        _weekStartDate = _normalizeToMonday(dt);
+      }
+    }
     _selectedShiftId = shiftId;
     _selectedShiftName = shiftName;
     _selectedEmployeeId = employeeId;
@@ -127,8 +243,9 @@ class ShiftAssignmentProvider with ChangeNotifier {
 
   /// Reset semua filter ke default periode mingguan
   Future<void> resetFilter() async {
-    _startDate = '2026-11-21';
-    _endDate = '2026-11-27';
+    _weekStartDate = _normalizeToMonday(DateTime.now());
+    _startDate = _formatYmd(_weekStartDate);
+    _endDate = _formatYmd(_weekStartDate.add(const Duration(days: 6)));
     _selectedShiftId = null;
     _selectedShiftName = null;
     _selectedEmployeeId = null;
@@ -137,9 +254,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
   }
 
   Future<void> clearDateRange() async {
-    _startDate = null;
-    _endDate = null;
-    await fetchAssignments(isRefresh: true);
+    goToToday();
   }
 
   Future<void> clearShiftFilter() async {
@@ -161,7 +276,7 @@ class ShiftAssignmentProvider with ChangeNotifier {
     );
   }
 
-  /// Eksekusi penugasan shift massal (Mockup 04 & 05)
+  /// Eksekusi penugasan shift massal (POST /api/v1/shift-assignments/bulk)
   Future<BulkAssignmentResult?> createBulkAssignment({
     required String shiftId,
     required String startDate,
@@ -198,9 +313,100 @@ class ShiftAssignmentProvider with ChangeNotifier {
         return null;
       },
       (res) {
-        // Muat ulang daftar assignment agar penugasan baru langsung masuk
         fetchAssignments();
         return res;
+      },
+    );
+  }
+
+  /// Memperbarui satu penugasan shift (PUT /api/v1/shift-assignments/:id)
+  Future<bool> updateShiftAssignment({
+    required String id,
+    required String shiftId,
+    String? workDate,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _repository.updateShiftAssignment(
+      id: id,
+      shiftId: shiftId,
+      workDate: workDate,
+    );
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.errorMessage;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (item) {
+        _isLoading = false;
+        fetchAssignments();
+        return true;
+      },
+    );
+  }
+
+  /// Menghapus satu penugasan shift (DELETE /api/v1/shift-assignments/:id)
+  Future<bool> deleteShiftAssignment(String id) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _repository.deleteShiftAssignment(id);
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.errorMessage;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (deletedId) {
+        _isLoading = false;
+        fetchAssignments();
+        return true;
+      },
+    );
+  }
+
+  /// Memperbarui penugasan shift massal (PUT /api/v1/shift-assignments/bulk)
+  Future<bool> updateBulkAssignment({
+    required String shiftId,
+    List<String>? assignmentIds,
+    String? startDate,
+    String? endDate,
+    List<String>? employeeIds,
+    String? oldShiftId,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await _repository.updateBulkAssignment(
+      shiftId: shiftId,
+      assignmentIds: assignmentIds,
+      startDate: startDate,
+      endDate: endDate,
+      employeeIds: employeeIds,
+      oldShiftId: oldShiftId,
+    );
+
+    return result.fold(
+      (failure) {
+        _errorMessage = failure.errorMessage;
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      },
+      (res) {
+        _isLoading = false;
+        clearSelection();
+        fetchAssignments();
+        return true;
       },
     );
   }

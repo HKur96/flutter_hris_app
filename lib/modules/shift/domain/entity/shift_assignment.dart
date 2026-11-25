@@ -194,3 +194,26 @@ class BulkAssignmentResult extends Equatable {
     shiftName,
   ];
 }
+
+/// Hasil respons pembaruan shift massal (Bulk Update Result) sesuai API 200
+class BulkUpdateResult extends Equatable {
+  final int count;
+  final List<String> updatedIds;
+  final String newShiftId;
+  final String? newShiftName;
+
+  const BulkUpdateResult({
+    required this.count,
+    required this.updatedIds,
+    required this.newShiftId,
+    this.newShiftName,
+  });
+
+  @override
+  List<Object?> get props => [
+    count,
+    updatedIds,
+    newShiftId,
+    newShiftName,
+  ];
+}
