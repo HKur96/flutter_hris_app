@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_hris_app/core/config/base_exception.dart';
 import 'package:flutter_hris_app/core/config/base_response.dart';
+import 'package:flutter_hris_app/core/helper/dio_exception_handler.dart';
 import 'package:flutter_hris_app/core/helper/dio_helper.dart';
 import 'package:flutter_hris_app/core/shared/app_secure_storage.dart';
 import 'package:flutter_hris_app/modules/auth/data/model/setup_status_model.dart';
@@ -51,8 +52,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await AppSecureStorage().writeUser(user);
 
       return Right(user);
-    } on DioException {
-      return Left(NetworkException('Gagal terhubung ke server'));
+    } on DioException catch(e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
     } catch (e, s) {
       debugPrint('Login exception: $e\n$s');
       return Left(DataException('Gagal Login'));
@@ -127,6 +128,100 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e, s) {
       debugPrint('Setup owner exception: $e\n$s');
       return Left(DataException('Gagal membuat akun OWNER'));
+    }
+  }
+
+  @override
+  Future<Either<BaseException, String>> updateStoreName(String storeName) async {
+    try {
+      final response = await _dioHelper.putRequest(
+        'api/v1/auth/store',
+        requestBody: {
+          'name': storeName,
+          'store_name': storeName,
+        },
+      );
+
+      final dynamic rawData = response.data is String
+          ? jsonDecode(response.data as String)
+          : response.data;
+      final res = BaseResponse<Map<String, dynamic>>.fromJson(
+        rawData as Map<String, dynamic>,
+      );
+
+      if (res.status != 200 && res.error != null && res.data == null) {
+        return Left(NetworkException(res.error!.message));
+      }
+
+      final returnedName =
+          res.data?['store_name'] ?? res.data?['name'] ?? storeName;
+      return Right(returnedName.toString());
+    } on DioException catch (e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
+    } catch (e, s) {
+      debugPrint('Update store name exception: $e\n$s');
+      return Left(DataException('Gagal memperbarui nama toko'));
+    }
+  }
+
+  @override
+  Future<Either<BaseException, bool>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dioHelper.postRequest(
+        'api/v1/auth/change-password',
+        requestBody: {
+          'current_password': oldPassword,
+          'new_password': newPassword,
+        },
+      );
+
+      final dynamic rawData = response.data is String
+          ? jsonDecode(response.data as String)
+          : response.data;
+      final res = BaseResponse<Map<String, dynamic>>.fromJson(
+        rawData as Map<String, dynamic>,
+      );
+
+      if (res.status != 200 && res.error != null) {
+        return Left(NetworkException(res.error!.message));
+      }
+
+      return const Right(true);
+    } on DioException catch (e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
+    } catch (e, s) {
+      debugPrint('Change password exception: $e\n$s');
+      return Left(DataException('Gagal mengubah kata sandi'));
+    }
+  }
+
+  @override
+  Future<Either<BaseException, User>> getMe() async {
+    try {
+      final response = await _dioHelper.getRequest('api/v1/auth/me');
+
+      final dynamic rawData = response.data is String
+          ? jsonDecode(response.data as String)
+          : response.data;
+      final res = BaseResponse<Map<String, dynamic>>.fromJson(
+        rawData as Map<String, dynamic>,
+      );
+
+      if (res.status != 200 && res.error != null && res.data == null) {
+        return Left(NetworkException(res.error!.message));
+      }
+
+      final user = UserModel.fromJson(res.data!['user'] ?? res.data!);
+      await AppSecureStorage().writeUser(user);
+      return Right(user);
+    } on DioException catch (e) {
+      return Left(NetworkException(DioExceptionHandler.errorFromDio(e)));
+    } catch (e, s) {
+      debugPrint('Get me exception: $e\n$s');
+      return Left(DataException('Gagal mengambil data profil'));
     }
   }
 }

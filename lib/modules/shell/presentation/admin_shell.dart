@@ -7,11 +7,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/components/components.dart';
-import '../../../../core/shared/app_secure_storage.dart';
 import '../../../../core/shared/responsive_builder.dart';
 import '../../dashboard/presentation/screens/dashboard_screen.dart';
 import '../../employee_management/presentation/screens/employee_list_screen.dart';
 import '../../shift/presentation/screens/shift_assignment_list_screen.dart';
+import 'widgets/admin_profile_view.dart';
 
 /// Shell Navigasi Utama untuk Peran Admin & Owner
 /// Mendukung layout responsif (BottomNavigationBar pada Mobile, NavigationRail pada Tablet/Desktop).
@@ -31,23 +31,6 @@ class _AdminShellState extends State<AdminShell> {
     super.dispose();
   }
 
-  Future<void> _handleLogout() async {
-    final confirmed = await AppDialog.showConfirmation(
-      context: context,
-      title: 'Keluar dari Portal Admin?',
-      message: 'Sesi manajerial Anda akan ditutup pada perangkat ini.',
-      confirmText: 'Keluar',
-      isDestructive: true,
-    );
-
-    if (confirmed == true && mounted) {
-      await AppSecureStorage().clearAll();
-      if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(AppConstants.kRouteLogin, (route) => false);
-    }
-  }
-
   void _onTabSelected(int index) {
     if (_currentIndex.value != index) {
       _currentIndex.value = index;
@@ -56,17 +39,19 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveBuilder(
-      mobile: _buildMobileLayout(),
-      tablet: _buildWideLayout(isDesktop: false),
-      desktop: _buildWideLayout(isDesktop: true),
+    return SafeArea(
+      child: ResponsiveBuilder(
+        mobile: _buildMobileLayout(),
+        tablet: _buildWideLayout(isDesktop: false),
+        desktop: _buildWideLayout(isDesktop: true),
+      ),
     );
   }
 
   Widget _buildMobileLayout() {
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      appBar: _buildAppBar(),
+      // appBar: _buildAppBar(),
       body: _buildCurrentTab(),
       bottomNavigationBar: ValueListenableBuilder<int>(
         valueListenable: _currentIndex,
@@ -136,9 +121,9 @@ class _AdminShellState extends State<AdminShell> {
                     label: Text('Payroll'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.admin_panel_settings_outlined),
-                    selectedIcon: Icon(Icons.admin_panel_settings_rounded),
-                    label: Text('Akun/Audit'),
+                    icon: Icon(Icons.person_outline_rounded),
+                    selectedIcon: Icon(Icons.person_rounded),
+                    label: Text('Profil'),
                   ),
                 ],
               );
@@ -170,7 +155,9 @@ class _AdminShellState extends State<AdminShell> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Sixbox HRIS',
+                      user?.storeName.isNotEmpty == true && user?.storeName != '-'
+                          ? user!.storeName
+                          : 'Sixbox HRIS',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -285,7 +272,7 @@ class _AdminShellState extends State<AdminShell> {
           case 4:
             return _buildPayrollTab();
           case 5:
-            return _buildAuditTab();
+            return const AdminProfileView();
           default:
             return const DashboardScreen(showAppBar: false);
         }
@@ -423,74 +410,6 @@ class _AdminShellState extends State<AdminShell> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAuditTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.space16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppCard(
-            title: 'Audit Trail & Rekam Mutasi Data',
-            trailing: const AppBadge.active(label: 'Forensik'),
-            child: Column(
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.login_rounded,
-                    color: AppColors.statusSuccess,
-                  ),
-                  title: Text(
-                    'LOGIN_SUCCESS',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Actor: budi.santoso@sixbox.com • 22 Nov 2026, 08:30 WIB',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.edit_note_rounded,
-                    color: AppColors.primary,
-                  ),
-                  title: Text(
-                    'LEAVE_REQUEST_SUBMIT',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Actor: budi.santoso@sixbox.com • Modul leave_requests',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space24),
-          AppButton.destructive(
-            text: 'Keluar dari Portal Admin',
-            icon: const Icon(Icons.logout_rounded, size: 18),
-            onPressed: _handleLogout,
           ),
         ],
       ),

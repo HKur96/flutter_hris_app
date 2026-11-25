@@ -11,6 +11,9 @@ class User extends Equatable {
   final String storeName;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? nik;
+  final String? position;
+  final String? department;
 
   const User({
     required this.id,
@@ -22,9 +25,42 @@ class User extends Equatable {
     required this.storeName,
     required this.createdAt,
     required this.updatedAt,
+    this.nik,
+    this.position,
+    this.department,
   });
 
   bool get canManage => role == Role.admin || role == Role.owner;
+
+  User copyWith({
+    String? id,
+    String? name,
+    String? employeeId,
+    String? email,
+    Role? role,
+    bool? isActive,
+    String? storeName,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? nik,
+    String? position,
+    String? department,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      employeeId: employeeId ?? this.employeeId,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      isActive: isActive ?? this.isActive,
+      storeName: storeName ?? this.storeName,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      nik: nik ?? this.nik,
+      position: position ?? this.position,
+      department: department ?? this.department,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -37,5 +73,8 @@ class User extends Equatable {
     storeName,
     createdAt,
     updatedAt,
+    nik,
+    position,
+    department,
   ];
 }

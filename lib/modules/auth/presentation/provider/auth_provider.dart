@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hris_app/core/config/extension.dart';
 import 'package:flutter_hris_app/core/config/global.dart';
 import 'package:flutter_hris_app/core/shared/app_secure_storage.dart';
+import 'package:flutter_hris_app/modules/auth/data/model/user_model.dart';
 import 'package:flutter_hris_app/modules/auth/data/repository/auth_repository_impl.dart';
 import 'package:flutter_hris_app/modules/auth/domain/auth_repository.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/setup_status.dart';
@@ -13,7 +14,7 @@ class AuthProvider with ChangeNotifier {
   final AuthRepository _repository;
 
   AuthProvider({AuthRepository? repository})
-      : _repository = repository ?? AuthRepositoryImpl();
+    : _repository = repository ?? AuthRepositoryImpl();
 
   bool _isLoadingLogin = false;
   String? _errorMessage;
@@ -132,5 +133,125 @@ class AuthProvider with ChangeNotifier {
       _isLoadingLogin = false;
       notifyListeners();
     }
+  }
+
+  /// Memperbarui nama toko / usaha milik akun Admin atau Owner via PUT /api/v1/auth/store
+  Future<bool> updateStoreName(String newStoreName) async {
+    if (_user == null) return false;
+    try {
+      _errorMessage = null;
+      notifyListeners();
+
+      final res = await _repository.updateStoreName(newStoreName);
+
+      bool isSuccess = true;
+      String finalName = newStoreName;
+
+      res.fold(
+        (l) {
+          _errorMessage = l.errorMessage;
+          isSuccess = false;
+        },
+        (r) {
+          finalName = r;
+          isSuccess = true;
+        },
+      );
+
+      if (!isSuccess) {
+        notifyListeners();
+        return false;
+      }
+
+      final updatedUser = _user!.copyWith(
+        storeName: finalName,
+        updatedAt: DateTime.now(),
+      );
+      _user = updatedUser;
+
+      final model = UserModel(
+        id: updatedUser.id,
+        name: updatedUser.name,
+        employeeId: updatedUser.employeeId,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        isActive: updatedUser.isActive,
+        storeName: updatedUser.storeName,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+        nik: updatedUser.nik,
+        position: updatedUser.position,
+        department: updatedUser.department,
+      );
+      try {
+        await AppSecureStorage().writeUser(model);
+      } catch (_) {}
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Memperbarui kata sandi mandiri via POST /api/v1/auth/change-password
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    var completer = Completer();
+    try {
+      gNavigatorKey.currentContext!.showLoadingDialog(
+        dismissCompleter: completer,
+        text: 'Sedang mengubah password Anda',
+      );
+      _errorMessage = null;
+      notifyListeners();
+
+      final res = await _repository.changePassword(
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+
+      final bool isSuccess = res.fold(
+        (l) {
+          _errorMessage = l.errorMessage;
+          notifyListeners();
+          return false;
+        },
+        (r) {
+          notifyListeners();
+          return r;
+        },
+      );
+      return isSuccess;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      if (!completer.isCompleted) completer.complete();
+    }
+  }
+
+  /// Sinkronisasi profil pengguna terbaru via GET /api/v1/auth/me
+  Future<void> refreshProfile() async {
+    try {
+      final res = await _repository.getMe();
+      res.fold((l) => null, (r) {
+        _user = r;
+        notifyListeners();
+      });
+    } catch (_) {}
+  }
+
+  /// Menghapus sesi login dan kredensial pengguna
+  Future<void> logout() async {
+    try {
+      await AppSecureStorage().clearAll();
+    } catch (_) {}
+    _user = null;
+    notifyListeners();
   }
 }

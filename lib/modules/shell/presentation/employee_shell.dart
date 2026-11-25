@@ -6,6 +6,7 @@ import '../../../../core/components/components.dart';
 import '../../../../core/shared/app_secure_storage.dart';
 import '../../../../core/shared/responsive_builder.dart';
 import '../../dashboard/presentation/screens/dashboard_screen.dart';
+import 'widgets/admin_profile_view.dart';
 
 /// Shell Navigasi Utama untuk Peran Karyawan (Employee)
 /// Mendukung layout responsif (BottomNavigationBar pada Mobile, NavigationRail pada Tablet/Desktop).
@@ -19,7 +20,6 @@ class EmployeeShell extends StatefulWidget {
 class _EmployeeShellState extends State<EmployeeShell> {
   int _currentIndex = 0;
   String _userEmail = 'Karyawan';
-  String _userName = 'Pengguna';
 
   @override
   void initState() {
@@ -32,7 +32,6 @@ class _EmployeeShellState extends State<EmployeeShell> {
     if (user != null && mounted) {
       setState(() {
         _userEmail = user.email;
-        _userName = user.email.split('@').first;
       });
     }
   }
@@ -64,17 +63,19 @@ class _EmployeeShellState extends State<EmployeeShell> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveBuilder(
-      mobile: _buildMobileLayout(),
-      tablet: _buildWideLayout(isDesktop: false),
-      desktop: _buildWideLayout(isDesktop: true),
+    return SafeArea(
+      child: ResponsiveBuilder(
+        mobile: _buildMobileLayout(),
+        tablet: _buildWideLayout(isDesktop: false),
+        desktop: _buildWideLayout(isDesktop: true),
+      ),
     );
   }
 
   Widget _buildMobileLayout() {
     return Scaffold(
       backgroundColor: AppColors.canvas,
-      appBar: _buildAppBar(),
+      // appBar: _buildAppBar(),
       body: _buildCurrentTab(),
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: _currentIndex,
@@ -432,132 +433,7 @@ class _EmployeeShellState extends State<EmployeeShell> {
   }
 
   Widget _buildProfileTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.space16),
-      child: Column(
-        children: [
-          AppCard(
-            padding: const EdgeInsets.all(AppSpacing.space20),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: AppColors.brand100,
-                  child: Text(
-                    _userName.isNotEmpty ? _userName[0].toUpperCase() : 'K',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.space12),
-                Text(
-                  _userName.toUpperCase(),
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _userEmail,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const AppBadge.active(label: 'Role: Karyawan'),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space16),
-          AppCard(
-            child: Column(
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Informasi Pribadi & Kontak',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'NIK, Departemen, No. HP',
-                    style: GoogleFonts.inter(fontSize: 12),
-                  ),
-                  leading: const Icon(
-                    Icons.badge_outlined,
-                    color: AppColors.primary,
-                  ),
-                  trailing: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Keamanan Akun',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Ganti kata sandi',
-                    style: GoogleFonts.inter(fontSize: 12),
-                  ),
-                  leading: const Icon(
-                    Icons.lock_outline_rounded,
-                    color: AppColors.primary,
-                  ),
-                  trailing: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'Pengaturan Notifikasi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Pengingat presensi & cuti',
-                    style: GoogleFonts.inter(fontSize: 12),
-                  ),
-                  leading: const Icon(
-                    Icons.notifications_none_rounded,
-                    color: AppColors.primary,
-                  ),
-                  trailing: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space24),
-          AppButton.destructive(
-            text: 'Keluar dari Sesi',
-            icon: const Icon(Icons.logout_rounded, size: 18),
-            onPressed: _handleLogout,
-          ),
-        ],
-      ),
-    );
+    return const AdminProfileView();
   }
 
   Widget _buildStatItem(String value, String label, Color color) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,8 +24,10 @@ import 'package:flutter_hris_app/modules/shift/domain/repository/shift_repositor
 import 'package:flutter_hris_app/modules/shift/presentation/provider/shift_assignment_provider.dart';
 import 'package:flutter_hris_app/modules/shift/presentation/provider/shift_provider.dart';
 
-/// Konfigurasi global pengujian: Nonaktifkan runtime font network fetch
+/// Konfigurasi global pengujian: Nonaktifkan runtime font network fetch & inisialisasi secure storage mock
 void setupTestEnvironment() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  FlutterSecureStorage.setMockInitialValues({});
   GoogleFonts.config.allowRuntimeFetching = false;
 }
 
@@ -110,6 +113,45 @@ class FakeAuthRepository implements AuthRepository {
       message: 'Setup complete',
     );
     return Right(owner);
+  }
+
+  @override
+  Future<Either<BaseException, String>> updateStoreName(String storeName) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    // Perbarui storeName pada user yang aktif jika ada
+    if (users.isNotEmpty) {
+      final firstKey = users.keys.first;
+      users[firstKey] = users[firstKey]!.copyWith(storeName: storeName);
+    }
+    return Right(storeName);
+  }
+
+  @override
+  Future<Either<BaseException, bool>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    return const Right(true);
+  }
+
+  @override
+  Future<Either<BaseException, User>> getMe() async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    if (users.isNotEmpty) {
+      return Right(users.values.first);
+    }
+    return Right(User(
+      id: 'mock-1',
+      name: 'Budi Santoso',
+      employeeId: 'emp-1',
+      email: 'budi.santoso@tokoberkah.com',
+      role: Role.owner,
+      isActive: true,
+      storeName: 'PT Berkah Makmur Sejahtera',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ));
   }
 }
 

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../theme/app_colors.dart';
 
-enum AppNavRole {
-  employee,
-  adminOrOwner,
-}
+enum AppNavRole { employee, adminOrOwner }
 
 class AppNavItem {
   final String label;
@@ -22,7 +20,7 @@ class AppNavItem {
 /// Modular Bottom Navigation Bar sesuai Tahap 1 Design Foundation.
 /// Disesuaikan secara kaku berdasarkan Role API:
 /// - EMPLOYEE: 4 tab fungsional (Presensi, Cuti & Izin, Slip Gaji, Profil)
-/// - OWNER/ADMIN: 5 tab operasional (Karyawan, Shift, Approval, Payroll, Akun/Audit)
+/// - OWNER/ADMIN: 5 tab operasional (Karyawan, Shift, Approval, Payroll, Akun/Audit, Profil)
 class AppBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -84,6 +82,11 @@ class AppBottomNavBar extends StatelessWidget {
       activeIcon: Icons.payments_rounded,
       inactiveIcon: Icons.payments_outlined,
     ),
+    AppNavItem(
+      label: 'Profil',
+      activeIcon: Icons.person_rounded,
+      inactiveIcon: Icons.person_outline_rounded,
+    ),
   ];
 
   @override
@@ -93,9 +96,7 @@ class AppBottomNavBar extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        border: Border(
-          top: BorderSide(color: AppColors.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -126,8 +127,9 @@ class AppBottomNavBar extends StatelessWidget {
                         item.label,
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: role == AppNavRole.employee ? 10.5 : 9.5,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                           color: isSelected
                               ? AppColors.primary
                               : AppColors.textSecondary,

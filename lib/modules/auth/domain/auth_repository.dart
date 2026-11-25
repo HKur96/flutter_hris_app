@@ -15,4 +15,13 @@ abstract class AuthRepository {
     String email,
     String password,
   );
+
+  Future<Either<BaseException, String>> updateStoreName(String storeName);
+
+  Future<Either<BaseException, bool>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  });
+
+  Future<Either<BaseException, User>> getMe();
 }
