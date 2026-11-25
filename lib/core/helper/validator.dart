@@ -66,4 +66,27 @@ class Validators {
     }
     return null;
   }
+
+  static String? breakTimeValidator(String? val) {
+    if (val == null || val.trim().isEmpty) {
+      return 'Durasi istirahat wajib diisi';
+    }
+
+    final parsed = int.tryParse(val.trim());
+    if (parsed == null || parsed < 0) {
+      return 'Masukkan angka menit yang valid';
+    }
+    return null;
+  }
+
+  static String? lateToleranceValidator(String? val) {
+    if (val == null || val.trim().isEmpty) {
+      return 'Toleransi keterlambatan wajib diisi';
+    }
+    final parsed = int.tryParse(val.trim());
+    if (parsed == null || parsed < 0) {
+      return 'Masukkan angka menit yang valid';
+    }
+    return null;
+  }
 }

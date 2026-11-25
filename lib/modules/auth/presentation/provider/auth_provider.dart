@@ -1,14 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_hris_app/core/config/base_exception.dart';
 import 'package:flutter_hris_app/core/config/extension.dart';
 import 'package:flutter_hris_app/core/config/global.dart';
-import 'package:flutter_hris_app/core/helper/dio_helper.dart';
 import 'package:flutter_hris_app/core/shared/app_secure_storage.dart';
 import 'package:flutter_hris_app/modules/auth/data/repository/auth_repository_impl.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/setup_status.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart' as au;
 
 class AuthProvider with ChangeNotifier {
@@ -127,47 +124,6 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       return null;
-    } finally {
-      _isLoadingLogin = false;
-      notifyListeners();
-    }
-  }
-
-  Future<bool> connectServer(String code) async {
-    try {
-      _errorMessage = null;
-      _isLoadingLogin = true;
-      notifyListeners();
-
-      // Ambil deployment_id dari database berdasarkan kode pendek
-      final response = await Supabase.instance.client
-          .from('app_configs')
-          .select('deployment_id')
-          .eq('short_code', code.toUpperCase())
-          .maybeSingle();
-
-      if (response == null) {
-        throw DataException('Kode salah!');
-      }
-
-      final deploymentId = response['deployment_id'] as String;
-
-      // Simpan ke DioHelper Singleton dan penyimpanan lokal (SharedPreferences)
-      const baseUrl = String.fromEnvironment(
-        'base_url',
-        defaultValue: 'https://script.google.com/macros/s/',
-      );
-      DioHelper.instance.baseUrl = '$baseUrl$deploymentId/exec';
-
-      await AppSecureStorage().writeDeploymentId(deploymentId);
-
-      return true;
-    } on DataException catch (e) {
-      _errorMessage = e.errorMessage;
-      return false;
-    } catch (e) {
-      _errorMessage = e.toString();
-      return false;
     } finally {
       _isLoadingLogin = false;
       notifyListeners();

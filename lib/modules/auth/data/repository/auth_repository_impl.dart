@@ -40,7 +40,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final user = UserModel.fromJson(res.data!['user']);
       
-      await AppSecureStorage().writeToken(res.data!['token']);
+      final token = res.data!['token'] ?? res.data!['access_token'];
+      final refreshToken = res.data!['refresh_token'];
+      if (token != null) {
+        await AppSecureStorage().writeToken(token.toString());
+      }
+      if (refreshToken != null) {
+        await AppSecureStorage().writeRefreshToken(refreshToken.toString());
+      }
       await AppSecureStorage().writeUser(user);
 
       return Right(user);
@@ -104,8 +111,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final user = UserModel.fromJson(res.data!['user']);
 
-      if (res.data!['token'] != null) {
-        await AppSecureStorage().writeToken(res.data!['token']);
+      final token = res.data!['token'] ?? res.data!['access_token'];
+      final refreshToken = res.data!['refresh_token'];
+      if (token != null) {
+        await AppSecureStorage().writeToken(token.toString());
+      }
+      if (refreshToken != null) {
+        await AppSecureStorage().writeRefreshToken(refreshToken.toString());
       }
       await AppSecureStorage().writeUser(user);
 

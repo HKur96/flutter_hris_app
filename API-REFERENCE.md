@@ -1,21 +1,21 @@
-# HRIS Google Apps Script Backend — Master API Reference
+# HRIS Cloudflare Workers Backend — Master API Reference
 
-Dokumen referensi resmi terpusat untuk seluruh REST API endpoint yang tersedia pada Backend HRIS Google Apps Script (GAS). Dokumen ini mencakup spesifikasi teknis dari **Foundation Phase**, **Modul 1 (`employees`)**, **Modul 2 (`users` / Auth)**, **Modul 3 (`shifts`)**, **Modul 4 (`shift_assignments`)**, **Modul 5 (`attendance`)**, **Modul 6 (`leave_requests`)**, **Modul 7 (`leave_balances`)**, **Modul 8 (`leave_transactions`)**, **Modul 9 (`overtime_requests`)**, **Modul 10 (`payroll_periods`)**, **Modul 11 (`payslips`)**, **Modul 12 (`cash_advances`)**, **Modul 13 (`cash_advance_installments`)**, hingga **Modul 14 (`cash_advance_transactions`)**.
+Dokumen referensi resmi terpusat untuk seluruh REST API endpoint yang tersedia pada Backend HRIS Cloudflare Workers. Dokumen ini mencakup spesifikasi teknis dari **Foundation Phase**, **Modul 1 (`employees`)**, **Modul 2 (`users` / Auth)**, **Modul 3 (`shifts`)**, **Modul 4 (`shift_assignments`)**, **Modul 5 (`attendance`)**, **Modul 6 (`leave_requests`)**, **Modul 7 (`leave_balances`)**, **Modul 8 (`leave_transactions`)**, **Modul 9 (`overtime_requests`)**, **Modul 10 (`payroll_periods`)**, **Modul 11 (`payslips`)**, **Modul 12 (`cash_advances`)**, **Modul 13 (`cash_advance_installments`)**, hingga **Modul 14 (`cash_advance_transactions`)**.
 
 ---
 
-## 1. Konvensi Protokol & Transport Google Apps Script
+## 1. Konvensi Protokol & Transport Cloudflare Workers
 
-### A. Mekanisme Komunikasi REST melalui `doGet(e)` dan `doPost(e)`
+### A. Mekanisme Komunikasi REST melalui `GET Handler` dan `POST Handler`
 
-Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan batasan runtime:
+Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edge Network dengan batasan runtime:
 
-1. **Header Kustom Tidak Didukung:** Runtime GAS tidak mengekspos request header kustom (`e.headers` fiktif dan tidak ada).
+1. **Header Kustom Tidak Didukung:** Runtime Cloudflare Workers tidak mengekspos request header kustom (`e.headers` fiktif dan tidak ada).
 2. **Tunneling HTTP Method:**
-   - Permintaan baca data menggunakan metode HTTP `GET` (`doGet(e)`).
-   - Seluruh mutasi data (`POST`, `PUT`, `DELETE`) dikirimkan melalui metode HTTP `POST` (`doPost(e)`). Untuk operasi `PUT` atau `DELETE`, sertakan properti `"_method": "PUT"` atau `"_method": "DELETE"` di dalam payload JSON.
+   - Permintaan baca data menggunakan metode HTTP `GET` (`GET Handler`).
+   - Seluruh mutasi data (`POST`, `PUT`, `DELETE`) dikirimkan melalui metode HTTP `POST` (`POST Handler`). Untuk operasi `PUT` atau `DELETE`, sertakan properti `"_method": "PUT"` atau `"_method": "DELETE"` di dalam payload JSON.
 3. **Pencegahan Penolakan CORS Preflight Browser:**
-   - Pemanggilan `POST` dari web browser wajib menggunakan header `Content-Type: text/plain;charset=utf-8` agar browser tidak mengirimkan preflight `OPTIONS` yang ditolak oleh GAS.
+   - Pemanggilan `POST` dari web browser wajib menggunakan header `Content-Type: text/plain;charset=utf-8` agar browser tidak mengirimkan preflight `OPTIONS` yang ditolak oleh Cloudflare Workers.
 4. **Pengiriman Token Autentikasi (`auth_token`):**
    - **Pada `GET`:** Dikirimkan via query parameter: `?path=...&auth_token=<JWT_TOKEN>`
    - **Pada `POST` / `PUT` / `DELETE`:** Dikirimkan di dalam JSON body envelope: `{"auth_token": "<JWT_TOKEN>", ...}`
@@ -67,7 +67,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   - `path`: `/` (Wajib jika via Web App URL)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=/"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/"
   ```
 - **Contoh Response (200):**
   ```json
@@ -75,7 +75,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
     "success": true,
     "status": 200,
     "data": {
-      "name": "HRIS Backend - Google Apps Script",
+      "name": "HRIS Backend - Cloudflare Workers",
       "version": "1.0.0",
       "phase": "Foundation Phase",
       "status": "ACTIVE",
@@ -93,7 +93,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 - **Role:** Publik
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=health"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/health"
   ```
 - **Contoh Response (200 Healthy):**
   ```json
@@ -104,8 +104,8 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
       "status": "HEALTHY",
       "timestamp": "2026-11-20T10:00:00.000Z",
       "services": {
-        "spreadsheet": { "healthy": true, "name": "HRIS Database Sheet" },
-        "lockService": { "healthy": true },
+        "database": { "healthy": true, "name": "HRIS Turso Database" },
+        "turso": { "healthy": true },
         "cacheService": { "healthy": true }
       }
     }
@@ -121,7 +121,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 - **Role:** Publik
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/schemas"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/schemas"
   ```
 - **Contoh Response (200):**
   ```json
@@ -143,35 +143,35 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 
 ---
 
-### 2.4. Initialize Database Sheets (`POST /api/v1/admin/init-database`)
+### 2.4. Initialize Database Tables (`POST /api/v1/admin/init-database`)
 
 - **Method:** `POST`
 - **Path:** `/api/v1/admin/init-database`
-- **Role:** Setup Awal (memerlukan `setup_key` jika `SETUP_KEY` terpasang di Script Properties, atau token `OWNER`/`ADMIN`)
+- **Role:** Setup Awal (memerlukan `setup_key` jika `SETUP_KEY` terpasang di Cloudflare Environment Variables / Secrets, atau token `OWNER`/`ADMIN`)
 - **Request Payload:**
   ```json
   {
-    "setup_key": "bootstrap-setup-key-company-2026", // Opsional, wajib jika Script Properties aktif
+    "setup_key": "bootstrap-setup-key-company-2026", // Opsional, wajib jika Cloudflare Environment Variables / Secrets aktif
     "force": false // Opsional, true untuk bypass proteksi re-inisialisasi
   }
   ```
 - **Proteksi Re-inisialisasi (Idempotency Guard):**
-  Jika seluruh 15 tabel database sudah tergenerate di Google Spreadsheet, request tidak akan memodifikasi/menimpa sheet yang ada dan langsung mengembalikan response `200 OK` dengan flag `alreadyInitialized: true`.
+  Jika seluruh 15 tabel database sudah tergenerate di Turso Database, request tidak akan memodifikasi/menimpa tabel yang ada dan langsung mengembalikan response `200 OK` dengan flag `alreadyInitialized: true`.
 - **Contoh Response (201 Created — Inisialisasi Pertama Kali):**
   ```json
   {
     "success": true,
     "status": 201,
     "data": {
-      "message": "Database sheets initialized successfully",
+      "message": "Database tables initialized successfully",
       "result": {
-        "initializedSheets": [
+        "initializedTables": [
           "employees",
           "users",
           "shifts",
-          "... (15 sheets)"
+          "... (15 tables)"
         ],
-        "existingSheets": []
+        "existingTables": []
       }
     }
   }
@@ -187,8 +187,8 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
       "totalTables": 15,
       "tables": ["employees", "users", "..."],
       "result": {
-        "initializedSheets": [],
-        "existingSheets": ["employees", "users", "..."]
+        "initializedTables": [],
+        "existingTables": ["employees", "users", "..."]
       }
     }
   }
@@ -220,7 +220,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/employees" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/employees" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -273,7 +273,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   - `offset` (opsional, default 0)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/employees&auth_token=YOUR_TOKEN&search=Budi&limit=10"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/employees&auth_token=YOUR_TOKEN&search=Budi&limit=10"
   ```
 
 ---
@@ -285,7 +285,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 - **Role:** `OWNER`, `ADMIN`, `EMPLOYEE` (Karyawan dibatasi pada datanya sendiri)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/employees/e4b5f8c2-3e44-4f81-a589-918237461234&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/employees/e4b5f8c2-3e44-4f81-a589-918237461234&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -312,6 +312,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 - **Method:** `POST` (dengan `_method: "DELETE"`)
 - **Path:** `/api/v1/employees/:id`
 - **Role:** `OWNER`, `ADMIN`
+- **Efek Samping (Cascade Deactivation):** Jika karyawan ini memiliki akun login di tabel `users` (`employee_id == employee.id`), status `is_active` akun user tersebut otomatis disinkronkan menjadi `false` (dinonaktifkan) sehingga tidak dapat login kembali.
 - **Request Payload:**
   ```json
   {
@@ -332,7 +333,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 - **Fungsi:** Mengetahui apakah tabel `users` masih kosong (`needsSetup: true`) sehingga aplikasi (Flutter/Web) dapat menentukan apakah harus menampilkan layar **Setup Owner Pertama Kali** atau langsung ke layar **Login**.
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/auth/setup-status"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/auth/setup-status"
   ```
 - **Contoh Response (200 — Tabel Users Masih Kosong):**
   ```json
@@ -500,6 +501,10 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
     "status": 200,
     "data": {
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expires_in": 604800,
+      "token_type": "Bearer",
       "user": {
         "id": "22222222-3333-4444-8555-666666666666",
         "email": "budi.santoso@company.com",
@@ -526,6 +531,10 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
     "status": 200,
     "data": {
       "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expires_in": 604800,
+      "token_type": "Bearer",
       "user": {
         "id": "11111111-2222-4333-8444-555555555555",
         "email": "owner@company.com",
@@ -541,7 +550,50 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 
 ---
 
-### 4.7. Profile Pengguna Aktif (`GET /api/v1/auth/me`)
+### 4.7. Refresh Access Token (`POST /api/v1/auth/refresh`)
+
+- **Method:** `POST`
+- **Path:** `/api/v1/auth/refresh` (atau alias `/api/v1/auth/refresh-token`)
+- **Role:** Publik (Membutuhkan Refresh Token)
+- **Header:** `Authorization: Bearer <REFRESH_TOKEN>` _(opsional jika disertakan di payload)_
+- **Request Payload:**
+  ```json
+  {
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+  ```
+- **Deskripsi & Mekanisme Interceptor:**
+  - Menghasilkan `access_token` baru (masa berlaku 7 hari) dan `refresh_token` terotasi baru (30 hari).
+  - Melakukan validasi real-time ke Turso Database untuk memastikan akun `users.is_active = 1` dan karyawan tidak dalam status `INACTIVE` atau terhapus.
+  - **Jika Akun Dinonaktifkan:** Mengembalikan status **`403 Forbidden`** dengan kode `'ACCOUNT_DEACTIVATED'`, memicu interceptor client (Flutter) untuk langsung menghapus sesi dan mengarahkan pengguna ke halaman login.
+  - **Jika Refresh Token Expired/Invalid:** Mengembalikan status **`401 Unauthorized`** dengan kode `'INVALID_REFRESH_TOKEN'`.
+- **Contoh Response (200 OK — Berhasil Refresh):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expires_in": 604800,
+      "token_type": "Bearer",
+      "user": {
+        "id": "22222222-3333-4444-8555-666666666666",
+        "email": "budi.santoso@company.com",
+        "role": "EMPLOYEE",
+        "employee_id": "e4b5f8c2-3e44-4f81-a589-918237461234",
+        "name": "Budi Santoso",
+        "is_active": true
+      }
+    },
+    "message": "Token refreshed successfully"
+  }
+  ```
+
+---
+
+### 4.8. Profile Pengguna Aktif (`GET /api/v1/auth/me`)
 
 - **Method:** `GET`
 - **Path:** `/api/v1/auth/me`
@@ -564,12 +616,12 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/auth/me&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/auth/me&auth_token=YOUR_TOKEN"
   ```
 
 ---
 
-### 4.8. Ganti Password Mandiri (`POST /api/v1/auth/change-password`)
+### 4.9. Ganti Password Mandiri (`POST /api/v1/auth/change-password`)
 
 - **Method:** `POST`
 - **Path:** `/api/v1/auth/change-password`
@@ -585,7 +637,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 
 ---
 
-### 4.9. Create User Akun Baru (`POST /api/v1/users`)
+### 4.10. Create User Akun Baru (`POST /api/v1/users`)
 
 - **Method:** `POST`
 - **Path:** `/api/v1/users`
@@ -614,6 +666,54 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
     "role": "ADMIN",
     "employee_id": null,
     "is_active": true
+  }
+  ```
+
+---
+
+### 4.11. Update Akun User (`PUT /api/v1/users/:id`)
+
+- **Method:** `POST` (dengan `_method: "PUT"`)
+- **Path:** `/api/v1/users/:id`
+- **Role:** `OWNER`, `ADMIN`
+- **Request Payload:**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "_method": "PUT",
+    "role": "ADMIN",
+    "is_active": false
+  }
+  ```
+
+---
+
+### 4.12. Deaktivasi / Soft Delete Akun User (`DELETE /api/v1/users/:id`)
+
+- **Method:** `POST` (dengan `_method: "DELETE"` atau path `POST /api/v1/users/:id/delete`)
+- **Path:** `/api/v1/users/:id`
+- **Role:** `OWNER`, `ADMIN`
+- **Aturan Proteksi:**
+  - Akun ber-role `OWNER` tidak dapat dideaktivasi/didelete.
+  - User tidak dapat mendeaktivasi akunnya sendiri.
+  - Deaktivasi mengubah `is_active` menjadi `false` (boolean). Begitu akun nonaktif, verifikasi real-time pada middleware token langsung menolak seluruh request berikutnya dengan status **HTTP 403 Forbidden** (`ACCOUNT_DEACTIVATED`), memicu Flutter Interceptor untuk logout otomatis.
+- **Request Payload:**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "_method": "DELETE"
+  }
+  ```
+- **Contoh Response (200):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "id": "11111111-2222-3333-4444-555555555555",
+      "is_active": false,
+      "message": "User account successfully deactivated."
+    }
   }
   ```
 
@@ -797,7 +897,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   _(Catatan: Untuk role `OWNER`/`ADMIN`, properti `employee_id` dapat disertakan jika ingin melakukan check-in atas nama karyawan)._
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/attendance/check-in" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/attendance/check-in" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_EMPLOYEE_TOKEN",
@@ -864,7 +964,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/attendance/check-out" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/attendance/check-out" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_EMPLOYEE_TOKEN",
@@ -967,7 +1067,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   - `offset` (opsional, default 0)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/attendance&auth_token=YOUR_TOKEN&start_date=2026-11-01&end_date=2026-11-30&status=LATE"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/attendance&auth_token=YOUR_TOKEN&start_date=2026-11-01&end_date=2026-11-30&status=LATE"
   ```
 
 ---
@@ -979,7 +1079,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
 - **Role:** `OWNER`, `ADMIN`, `EMPLOYEE` (Karyawan dibatasi pada datanya sendiri)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/attendance/77777777-8888-4999-8000-111122223333&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/attendance/77777777-8888-4999-8000-111122223333&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -1000,7 +1100,7 @@ Google Apps Script Web App berjalan di atas infrastruktur Google Cloud dengan ba
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/attendance/77777777-8888-4999-8000-111122223333" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/attendance/77777777-8888-4999-8000-111122223333" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -1037,7 +1137,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
     "start_date": "2026-12-01",
     "end_date": "2026-12-03",
     "reason": "Acara pernikahan keluarga di luar kota",
-    "attachment_url": "https://drive.google.com/file/d/sample/view"
+    "attachment_url": "https://storage.company.com/files/sample.pdf"
   }
   ```
 - **Contoh Response Berhasil (`201 Created`):**
@@ -1052,7 +1152,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
       "start_date": "2026-12-01",
       "end_date": "2026-12-03",
       "reason": "Acara pernikahan keluarga di luar kota",
-      "attachment_url": "https://drive.google.com/file/d/sample/view",
+      "attachment_url": "https://storage.company.com/files/sample.pdf",
       "status": "PENDING",
       "approved_by": null,
       "approved_at": null,
@@ -1076,7 +1176,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-requests" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-requests" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_TOKEN",
@@ -1105,7 +1205,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
   - `offset` (opsional): Offset data (default: 0)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-requests&status=PENDING&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-requests&status=PENDING&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -1117,7 +1217,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
 - **Role:** `OWNER`, `ADMIN`, `EMPLOYEE` (Role `EMPLOYEE` ditolak `403 Forbidden` jika mencoba melihat permohonan karyawan lain)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -1139,7 +1239,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666/approve" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666/approve" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN"
@@ -1165,7 +1265,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666/reject" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666/reject" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN"
@@ -1209,7 +1309,7 @@ Tabel `leave_requests` mengelola alur pengajuan permohonan cuti tahunan, sakit, 
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666/cancel" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-requests/aaaa1111-bb22-4c33-8d44-eeee55556666/cancel" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_TOKEN"
@@ -1266,7 +1366,7 @@ Tabel `leave_balances` mengelola kuota cuti tahunan (_annual leave balance_) per
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-balances" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-balances" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -1313,7 +1413,7 @@ Tabel `leave_balances` mengelola kuota cuti tahunan (_annual leave balance_) per
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-balances/bulk-allocate" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-balances/bulk-allocate" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -1337,7 +1437,7 @@ Tabel `leave_balances` mengelola kuota cuti tahunan (_annual leave balance_) per
   - `offset` (opsional): Offset data (default: 0)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-balances&year=2026&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-balances&year=2026&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -1349,7 +1449,7 @@ Tabel `leave_balances` mengelola kuota cuti tahunan (_annual leave balance_) per
 - **Role:** `OWNER`, `ADMIN`, `EMPLOYEE` (Role `EMPLOYEE` ditolak `403 Forbidden` jika mencoba mengakses saldo karyawan lain)
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-balances/bbbb2222-cc33-4d44-8e55-ffff66667777&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-balances/bbbb2222-cc33-4d44-8e55-ffff66667777&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -1393,7 +1493,7 @@ Tabel `leave_balances` mengelola kuota cuti tahunan (_annual leave balance_) per
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-balances/bbbb2222-cc33-4d44-8e55-ffff66667777" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-balances/bbbb2222-cc33-4d44-8e55-ffff66667777" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -1440,7 +1540,7 @@ Sistem **tidak menyediakan endpoint `PUT` atau `DELETE`** untuk transaksi demi m
   - `offset` (opsional, INTEGER): Posisi awal data (default: 0)
 - **Contoh Request (curl):**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-transactions&transaction_type=USAGE&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-transactions&transaction_type=USAGE&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -1482,7 +1582,7 @@ Sistem **tidak menyediakan endpoint `PUT` atau `DELETE`** untuk transaksi demi m
 - **Role:** `OWNER`, `ADMIN`, `EMPLOYEE` (Role `EMPLOYEE` ditolak `403 Forbidden` jika mencoba mengakses transaksi karyawan lain)
 - **Contoh Request (curl):**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-transactions/77777777-8888-4999-8000-111122223333&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-transactions/77777777-8888-4999-8000-111122223333&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -1569,7 +1669,7 @@ Sistem **tidak menyediakan endpoint `PUT` atau `DELETE`** untuk transaksi demi m
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/leave-transactions/adjust" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/leave-transactions/adjust" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -1640,7 +1740,7 @@ Tabel `overtime_requests` mengelola alur pengajuan lembur karyawan dengan penega
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/overtime-requests" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/overtime-requests" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_TOKEN",
@@ -1668,7 +1768,7 @@ Tabel `overtime_requests` mengelola alur pengajuan lembur karyawan dengan penega
   - `offset` (opsional, default 0)
 - **Contoh Request (curl):**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/overtime-requests&auth_token=YOUR_TOKEN&status=PENDING"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/overtime-requests&auth_token=YOUR_TOKEN&status=PENDING"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -1714,7 +1814,7 @@ Tabel `overtime_requests` mengelola alur pengajuan lembur karyawan dengan penega
 - **Role:** `OWNER`, `ADMIN`, `EMPLOYEE` (Role `EMPLOYEE` dibatasi pada datanya sendiri, ditolak `403 Forbidden` jika mengakses milik karyawan lain)
 - **Contoh Request (curl):**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/overtime-requests/22222222-3333-4444-8555-666666666666&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/overtime-requests/22222222-3333-4444-8555-666666666666&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -1775,7 +1875,7 @@ Tabel `overtime_requests` mengelola alur pengajuan lembur karyawan dengan penega
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/overtime-requests/22222222-3333-4444-8555-666666666666/approve" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/overtime-requests/22222222-3333-4444-8555-666666666666/approve" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{ "auth_token": "YOUR_ADMIN_TOKEN" }'
   ```
@@ -1813,7 +1913,7 @@ Tabel `overtime_requests` mengelola alur pengajuan lembur karyawan dengan penega
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/overtime-requests/22222222-3333-4444-8555-666666666666/reject" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/overtime-requests/22222222-3333-4444-8555-666666666666/reject" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -1852,7 +1952,7 @@ Tabel `overtime_requests` mengelola alur pengajuan lembur karyawan dengan penega
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/overtime-requests/22222222-3333-4444-8555-666666666666/cancel" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/overtime-requests/22222222-3333-4444-8555-666666666666/cancel" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{ "auth_token": "YOUR_TOKEN" }'
   ```
@@ -1909,7 +2009,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payroll-periods" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payroll-periods" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -1937,7 +2037,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
   - `offset` (opsional, default 0)
 - **Contoh Request (curl):**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payroll-periods&auth_token=YOUR_TOKEN&year=2026"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payroll-periods&auth_token=YOUR_TOKEN&year=2026"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -1977,7 +2077,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
 - **RBAC Rule:** Role `EMPLOYEE` ditolak `403 Forbidden` jika periode masih berstatus `DRAFT`.
 - **Contoh Request (curl):**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payroll-periods/11111111-2222-4333-8444-555555555555&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payroll-periods/11111111-2222-4333-8444-555555555555&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -2038,7 +2138,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payroll-periods/11111111-2222-4333-8444-555555555555" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payroll-periods/11111111-2222-4333-8444-555555555555" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2054,7 +2154,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
 - **Method:** `POST` (dengan `_method: "DELETE"`)
 - **Path:** `/api/v1/payroll-periods/:id`
 - **Role:** `OWNER`, `ADMIN` (Role `EMPLOYEE` ditolak `403 Forbidden`)
-- **Immutability Lock:** Hanya diizinkan pada status `DRAFT`. Jika periode telah `FINALIZED` atau `PAID`, sistem menolak penghapusan dengan `409 Conflict` (`PAYROLL_PERIOD_LOCKED`). Menjalankan hard delete pada sheet database.
+- **Immutability Lock:** Hanya diizinkan pada status `DRAFT`. Jika periode telah `FINALIZED` atau `PAID`, sistem menolak penghapusan dengan `409 Conflict` (`PAYROLL_PERIOD_LOCKED`). Menjalankan hard delete pada tabel database.
 - **Request Payload:**
   ```json
   {
@@ -2077,7 +2177,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payroll-periods/11111111-2222-4333-8444-555555555555" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payroll-periods/11111111-2222-4333-8444-555555555555" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2118,7 +2218,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payroll-periods/11111111-2222-4333-8444-555555555555/finalize" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payroll-periods/11111111-2222-4333-8444-555555555555/finalize" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{ "auth_token": "YOUR_ADMIN_TOKEN" }'
   ```
@@ -2160,7 +2260,7 @@ Tabel `payroll_periods` mengelola siklus periode penggajian (payroll cycle) deng
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payroll-periods/11111111-2222-4333-8444-555555555555/pay" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payroll-periods/11111111-2222-4333-8444-555555555555/pay" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2235,7 +2335,7 @@ Modul `payslips` mengelola pembuatan, rekonsiliasi, pemutakhiran tunjangan/poton
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payslips/generate" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payslips/generate" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2287,7 +2387,7 @@ Modul `payslips` mengelola pembuatan, rekonsiliasi, pemutakhiran tunjangan/poton
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payslips&auth_token=YOUR_TOKEN&payroll_period_id=11111111-2222-4333-8444-555555555555"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payslips&auth_token=YOUR_TOKEN&payroll_period_id=11111111-2222-4333-8444-555555555555"
   ```
 
 ---
@@ -2322,7 +2422,7 @@ Modul `payslips` mengelola pembuatan, rekonsiliasi, pemutakhiran tunjangan/poton
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payslips/slip-uuid-1&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payslips/slip-uuid-1&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -2365,7 +2465,7 @@ Modul `payslips` mengelola pembuatan, rekonsiliasi, pemutakhiran tunjangan/poton
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payslips/slip-uuid-1" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payslips/slip-uuid-1" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2406,7 +2506,7 @@ Modul `payslips` mengelola pembuatan, rekonsiliasi, pemutakhiran tunjangan/poton
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/payslips/slip-uuid-1/pay" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/payslips/slip-uuid-1/pay" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN"
@@ -2486,7 +2586,7 @@ Modul ini mengelola siklus hidup pengajuan kasbon (pinjaman karyawan / _cash adv
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_EMPLOYEE_TOKEN",
@@ -2550,7 +2650,7 @@ Modul ini mengelola siklus hidup pengajuan kasbon (pinjaman karyawan / _cash adv
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances&auth_token=YOUR_TOKEN&status=PENDING"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances&auth_token=YOUR_TOKEN&status=PENDING"
   ```
 
 ---
@@ -2591,7 +2691,7 @@ Modul ini mengelola siklus hidup pengajuan kasbon (pinjaman karyawan / _cash adv
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X GET "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances/ca-uuid-1111&auth_token=YOUR_TOKEN"
+  curl -L -X GET "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances/ca-uuid-1111&auth_token=YOUR_TOKEN"
   ```
 
 ---
@@ -2636,7 +2736,7 @@ Modul ini mengelola siklus hidup pengajuan kasbon (pinjaman karyawan / _cash adv
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances/ca-uuid-1111/approve" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances/ca-uuid-1111/approve" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2680,7 +2780,7 @@ Modul ini mengelola siklus hidup pengajuan kasbon (pinjaman karyawan / _cash adv
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances/ca-uuid-1111/reject" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances/ca-uuid-1111/reject" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2727,7 +2827,7 @@ Modul ini mengelola siklus hidup pengajuan kasbon (pinjaman karyawan / _cash adv
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances/ca-uuid-1111/disburse" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances/ca-uuid-1111/disburse" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_ADMIN_TOKEN",
@@ -2774,7 +2874,7 @@ Modul ini mengelola siklus hidup pengajuan kasbon (pinjaman karyawan / _cash adv
   ```
 - **Contoh curl:**
   ```bash
-  curl -L -X POST "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances/ca-uuid-1111/cancel" \
+  curl -L -X POST "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances/ca-uuid-1111/cancel" \
     -H "Content-Type: text/plain;charset=utf-8" \
     -d '{
       "auth_token": "YOUR_TOKEN",
@@ -2821,7 +2921,7 @@ Tabel `cash_advance_installments` mengelola jadwal amortisasi pelunasan pinjaman
     - `status` (opsional): Memfilter berdasarkan status (`PENDING`, `PARTIALLY_PAID`, `PAID`, `OVERDUE`, `WAIVED`).
 - **Contoh Request:**
   ```bash
-  curl -L "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advance-installments&cash_advance_id=ca-uuid-1111&auth_token=YOUR_TOKEN"
+  curl -L "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advance-installments&cash_advance_id=ca-uuid-1111&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -2894,7 +2994,7 @@ Tabel `cash_advance_installments` mengelola jadwal amortisasi pelunasan pinjaman
   - Jika pengguna adalah role `EMPLOYEE` dan termin tersebut milik karyawan lain, permintaan ditolak dengan `403 Forbidden`.
 - **Contoh Request:**
   ```bash
-  curl -L "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advance-installments/inst-uuid-0001&auth_token=YOUR_TOKEN"
+  curl -L "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advance-installments/inst-uuid-0001&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -3110,7 +3210,7 @@ Sistem menjamin integritas buku besar secara otomatis pada seluruh alur kasbon:
     - `limit` (default 50, max 200) & `offset` (default 0).
 - **Contoh Request:**
   ```bash
-  curl -L "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advance-transactions&cash_advance_id=ca-uuid-1111&auth_token=YOUR_TOKEN"
+  curl -L "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advance-transactions&cash_advance_id=ca-uuid-1111&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -3172,7 +3272,7 @@ Sistem menjamin integritas buku besar secara otomatis pada seluruh alur kasbon:
   - Jika pengguna adalah role `EMPLOYEE` dan transaksi tersebut milik karyawan lain, permintaan ditolak dengan `403 Forbidden`.
 - **Contoh Request:**
   ```bash
-  curl -L "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advance-transactions/tx-uuid-0001&auth_token=YOUR_TOKEN"
+  curl -L "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advance-transactions/tx-uuid-0001&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -3264,7 +3364,7 @@ Sistem menjamin integritas buku besar secara otomatis pada seluruh alur kasbon:
     - `is_balanced` bernilai `true` jika dan hanya jika `outstanding_balance === installments_outstanding`.
 - **Contoh Request:**
   ```bash
-  curl -L "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/cash-advances/ca-uuid-1111/reconciliation&auth_token=YOUR_TOKEN"
+  curl -L "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/cash-advances/ca-uuid-1111/reconciliation&auth_token=YOUR_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -3321,7 +3421,7 @@ Modul 15 merupakan modul tabel ke-15 sekaligus modul penutup dari arsitektur 15 
   - `offset` (integer, opsional, default `0`): Posisi index mulai.
 - **Contoh Request:**
   ```bash
-  curl -L "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/audit-logs&entity=users&action=UPDATE&auth_token=YOUR_ADMIN_TOKEN"
+  curl -L "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/audit-logs&entity=users&action=UPDATE&auth_token=YOUR_ADMIN_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -3367,7 +3467,7 @@ Modul 15 merupakan modul tabel ke-15 sekaligus modul penutup dari arsitektur 15 
 - **Role:** `OWNER`, `ADMIN` (Role `EMPLOYEE` ditolak dengan `403 Forbidden`)
 - **Contoh Request:**
   ```bash
-  curl -L "https://script.google.com/macros/s/<SCRIPT_ID>/exec?path=api/v1/audit-logs/aud-uuid-0001&auth_token=YOUR_ADMIN_TOKEN"
+  curl -L "https://hris-backend-worker.<account>.workers.dev/api/v1/api/v1/audit-logs/aud-uuid-0001&auth_token=YOUR_ADMIN_TOKEN"
   ```
 - **Contoh Response Berhasil (`200 OK`):**
   ```json
@@ -3399,4 +3499,4 @@ Modul 15 merupakan modul tabel ke-15 sekaligus modul penutup dari arsitektur 15 
 - **Respons Error Umum:**
   - `401 Unauthorized`: Token otentikasi tidak disediakan atau tidak valid.
   - `403 Forbidden`: Pengguna memiliki role `EMPLOYEE`.
-  - `404 Not Found`: ID audit log tidak ditemukan di sheet `audit_logs`.
+  - `404 Not Found`: ID audit log tidak ditemukan di tabel `audit_logs`.

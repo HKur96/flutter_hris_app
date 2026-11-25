@@ -19,6 +19,7 @@ class AppSecureStorage {
 
   // keys
   static const String _token = 'app-token';
+  static const String _refreshToken = 'app-refresh-token';
   static const String _user = 'app-user';
   static const String _deploymentId = 'app-deployment-id';
 
@@ -45,6 +46,21 @@ class AppSecureStorage {
   // delete token
   Future<void> deleteToken() async {
     await _storage.delete(key: _token);
+  }
+
+  // write refresh token
+  Future<void> writeRefreshToken(String refreshToken) async {
+    await _storage.write(key: _refreshToken, value: refreshToken);
+  }
+
+  // read refresh token
+  Future<String?> readRefreshToken() async {
+    return await _storage.read(key: _refreshToken);
+  }
+
+  // delete refresh token
+  Future<void> deleteRefreshToken() async {
+    await _storage.delete(key: _refreshToken);
   }
 
   // write user
@@ -74,6 +90,7 @@ class AppSecureStorage {
   // clear all credentials (logout)
   Future<void> clearAll() async {
     await deleteToken();
+    await deleteRefreshToken();
     await deleteUser();
   }
 }

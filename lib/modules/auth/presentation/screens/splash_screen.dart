@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/enum.dart';
-import 'package:flutter_hris_app/core/helper/dio_helper.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/components/components.dart';
-import '../../../../core/shared/app_secure_storage.dart';
 
 /// Screen Splash awal aplikasi dengan logika pengecekan sesi login pengguna
 class SplashScreen extends StatefulWidget {
@@ -36,22 +34,6 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     try {
-      final deploymentId = await AppSecureStorage().readDeploymentId();
-
-      if (deploymentId == null) {
-        if (!mounted) return;
-        Navigator.of(context)
-            .pushReplacementNamed(AppConstants.kRouteDeploymentConfig);
-        return;
-      }
-
-      // Setup dio helper base url
-      const baseUrl = String.fromEnvironment(
-        'base_url',
-        defaultValue: 'https://script.google.com/macros/s/',
-      );
-      DioHelper.instance.baseUrl = '$baseUrl$deploymentId/exec';
-
       final user = await _authProvider.getCurrentUser();
 
       if (!mounted) return;

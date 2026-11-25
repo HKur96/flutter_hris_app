@@ -23,6 +23,7 @@ class AppTextField extends StatefulWidget {
   final bool readOnly;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
+  final String? suffixText;
   final TextInputType keyboardType;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onChanged;
@@ -68,6 +69,7 @@ class AppTextField extends StatefulWidget {
     this.focusNode,
     this.validator,
     this.onTapOutside,
+    this.suffixText,
   });
 
   @override
@@ -166,6 +168,11 @@ class _AppTextFieldState extends State<AppTextField> {
                     color: AppColors.textMuted,
                   )
                 : GoogleFonts.inter(fontSize: 12, color: AppColors.textMuted),
+            suffixText: widget.suffixText,
+            suffixStyle: GoogleFonts.inter(
+              fontSize: 12.5,
+              color: AppColors.textSecondary,
+            ),
             filled: true,
             fillColor: widget.enabled
                 ? AppColors.surface

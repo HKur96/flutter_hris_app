@@ -1,4 +1,4 @@
-﻿class AppConstants {
+class AppConstants {
   // Private constructor to prevent external instantiation.
   AppConstants._();
 
@@ -10,11 +10,16 @@
     return _instance;
   }
 
+  // Base API URL default
+  static const String kDefaultBaseUrl = String.fromEnvironment(
+    'base_url',
+    defaultValue: 'https://hris-backend-worker.hkurhris.workers.dev/',
+  );
+
   // Auth
   static const String kRouteRoot = '/';
   static const String kRouteSplash = '/splash';
   static const String kRouteLogin = '/login';
-  static const String kRouteDeploymentConfig = '/deployment-config';
   static const String kRouteInitOwnerSetup = '/initial-owner-setup';
   static const String kRouteDashboard = '/dashboard';
   static const String kRouteEmployeeShell = '/employee/shell';

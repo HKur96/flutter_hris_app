@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
+import 'package:flutter_hris_app/modules/shift/presentation/screens/bulk_assignment_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -10,6 +11,7 @@ import '../../../../core/shared/app_secure_storage.dart';
 import '../../../../core/shared/responsive_builder.dart';
 import '../../dashboard/presentation/screens/dashboard_screen.dart';
 import '../../employee_management/presentation/screens/employee_list_screen.dart';
+import '../../shift/presentation/screens/shift_assignment_list_screen.dart';
 
 /// Shell Navigasi Utama untuk Peran Admin & Owner
 /// Mendukung layout responsif (BottomNavigationBar pada Mobile, NavigationRail pada Tablet/Desktop).
@@ -41,7 +43,8 @@ class _AdminShellState extends State<AdminShell> {
     if (confirmed == true && mounted) {
       await AppSecureStorage().clearAll();
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(AppConstants.kRouteLogin, (route) => false);
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(AppConstants.kRouteLogin, (route) => false);
     }
   }
 
@@ -208,7 +211,7 @@ class _AdminShellState extends State<AdminShell> {
   Widget _buildAppbarActions(User? user) {
     return ValueListenableBuilder<int>(
       valueListenable: _currentIndex,
-      builder: (_, currentIndex, _) {
+      builder: (context, currentIndex, child) {
         if (currentIndex == 1 && user?.canManage == true) {
           return ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -234,6 +237,33 @@ class _AdminShellState extends State<AdminShell> {
           );
         }
 
+        if (currentIndex == 2 && user?.canManage == true) {
+          return ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.small),
+              ),
+            ),
+            icon: const Icon(Icons.add_rounded, size: 16),
+            label: Text(
+              'Tambah Penugasan',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BulkAssignmentScreen()),
+              );
+            },
+          );
+        }
+
         return const SizedBox.shrink();
       },
     );
@@ -242,14 +272,14 @@ class _AdminShellState extends State<AdminShell> {
   Widget _buildCurrentTab() {
     return ValueListenableBuilder<int>(
       valueListenable: _currentIndex,
-      builder: (_, currentIndex, _) {
+      builder: (context, currentIndex, child) {
         switch (currentIndex) {
           case 0:
             return const DashboardScreen(showAppBar: false);
           case 1:
             return const EmployeeListScreen();
           case 2:
-            return _buildShiftManagementTab();
+            return const ShiftAssignmentListScreen();
           case 3:
             return _buildApprovalTab();
           case 4:
@@ -260,96 +290,6 @@ class _AdminShellState extends State<AdminShell> {
             return const DashboardScreen(showAppBar: false);
         }
       },
-    );
-  }
-
-  Widget _buildShiftManagementTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppSpacing.space16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppCard(
-            title: 'Master Jadwal Shift',
-            trailing: const AppBadge.active(label: '3 Shift'),
-            child: Column(
-              children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.wb_sunny_outlined,
-                    color: Colors.orange,
-                  ),
-                  title: Text(
-                    'Shift Pagi (General)',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '08:00 - 16:00 WIB • Toleransi 15 Menit',
-                    style: GoogleFonts.inter(fontSize: 12),
-                  ),
-                  trailing: const AppBadge.active(),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.wb_cloudy_outlined,
-                    color: Colors.blue,
-                  ),
-                  title: Text(
-                    'Shift Siang',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '13:00 - 21:00 WIB • Toleransi 15 Menit',
-                    style: GoogleFonts.inter(fontSize: 12),
-                  ),
-                  trailing: const AppBadge.active(),
-                ),
-                const Divider(height: 1, color: AppColors.border),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.nightlight_round,
-                    color: Colors.purple,
-                  ),
-                  title: Text(
-                    'Shift Malam',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    '21:00 - 05:00 WIB • Toleransi 15 Menit',
-                    style: GoogleFonts.inter(fontSize: 12),
-                  ),
-                  trailing: const AppBadge.active(),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space16),
-          AppButton.secondary(
-            text: 'Atur & Plot Penugasan Roster Shift',
-            icon: const Icon(Icons.calendar_month_rounded, size: 18),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Plotting roster shift siap diintegrasikan'),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
     );
   }
 

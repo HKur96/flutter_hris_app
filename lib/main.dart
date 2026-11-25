@@ -4,12 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/global.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
-import 'package:flutter_hris_app/modules/auth/presentation/screens/deployment_config_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/initial_owner_setup_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/login_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/splash_screen.dart';
 import 'package:flutter_hris_app/modules/employee_management/presentation/provider/employee_management_provider.dart';
 import 'package:flutter_hris_app/modules/employee_management/presentation/screens/add_edit_employee_screen.dart';
+import 'package:flutter_hris_app/modules/shift/presentation/provider/shift_assignment_provider.dart';
+import 'package:flutter_hris_app/modules/shift/presentation/provider/shift_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:requests_inspector/requests_inspector.dart';
@@ -48,6 +49,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeManagementProvider()),
+        ChangeNotifierProvider(create: (_) => ShiftProvider()),
+        ChangeNotifierProvider(create: (_) => ShiftAssignmentProvider()),
       ],
       child: MaterialApp(
         title: 'KaryaHR Mobile',
@@ -67,8 +70,6 @@ class MyApp extends StatelessWidget {
           AppConstants.kRouteRoot: (context) => const SplashScreen(),
           AppConstants.kRouteSplash: (context) => const SplashScreen(),
           AppConstants.kRouteLogin: (context) => const LoginScreen(),
-          AppConstants.kRouteDeploymentConfig: (context) =>
-              const DeploymentConfigScreen(),
           AppConstants.kRouteInitOwnerSetup: (context) =>
               const InitialOwnerSetupScreen(),
           AppConstants.kRouteDashboard: (context) =>
