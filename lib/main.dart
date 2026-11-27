@@ -16,7 +16,6 @@ import 'package:flutter_hris_app/modules/shift/presentation/provider/shift_provi
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:requests_inspector/requests_inspector.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/admin_routes.dart';
 import 'core/config/employee_routes.dart';
@@ -31,16 +30,16 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  await _initializeSupabase();
+  // await _initializeSupabase();
   runApp(RequestsInspector(enabled: kDebugMode, child: const MyApp()));
 }
 
-Future<void> _initializeSupabase() async {
-  await Supabase.initialize(
-    url: const String.fromEnvironment('url'),
-    publishableKey: const String.fromEnvironment('publishable_key'),
-  );
-}
+// Future<void> _initializeSupabase() async {
+// await Supabase.initialize(
+//   url: const String.fromEnvironment('url'),
+//   publishableKey: const String.fromEnvironment('publishable_key'),
+// );
+// }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

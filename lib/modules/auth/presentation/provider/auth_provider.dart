@@ -138,7 +138,13 @@ class AuthProvider with ChangeNotifier {
   /// Memperbarui nama toko / usaha & opsi sistem shift milik akun Admin atau Owner via PUT /api/v1/auth/store
   Future<bool> updateStoreName(String newStoreName, {bool? isShift}) async {
     if (_user == null) return false;
+    var completer = Completer();
     try {
+      gNavigatorKey.currentContext!.showLoadingDialog(
+        dismissCompleter: completer,
+        text: 'Sedang mengubah data Anda...',
+      );
+
       _errorMessage = null;
       notifyListeners();
 
@@ -197,6 +203,8 @@ class AuthProvider with ChangeNotifier {
       _errorMessage = e.toString();
       notifyListeners();
       return false;
+    } finally {
+      if (!completer.isCompleted) completer.complete();
     }
   }
 

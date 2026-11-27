@@ -6,7 +6,7 @@ import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/enum.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
-import 'package:flutter_hris_app/modules/shell/presentation/widgets/admin_profile_view.dart';
+import 'package:flutter_hris_app/modules/shell/presentation/widgets/profile_view.dart';
 import '../../helpers/test_helpers.dart';
 
 void main() {
@@ -25,7 +25,18 @@ void main() {
             bottomNavigationBar: AppBottomNavBar(
               currentIndex: selectedTab,
               onTap: (index) => selectedTab = index,
-              role: AppNavRole.adminOrOwner,
+              currentUser: User(
+                id: 'admin-1',
+                name: 'Admin Utama',
+                employeeId: 'emp-admin',
+                email: 'admin@karyahr.com',
+                role: Role.admin,
+                isActive: true,
+                storeName: 'Sixbox Roastery',
+                isShift: true,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
             ),
           ),
         ),
@@ -42,6 +53,47 @@ void main() {
       // Tap tab Profil
       await tester.tap(find.text('Profil'));
       expect(selectedTab, 5);
+    });
+
+    testWidgets(
+        'AppBottomNavBar untuk admin/owner dengan isShift false hanya memiliki 5 tab (tanpa Shift)',
+        (tester) async {
+      int selectedTab = 0;
+
+      await tester.pumpWidget(
+        createTestApp(
+          child: Scaffold(
+            bottomNavigationBar: AppBottomNavBar(
+              currentIndex: selectedTab,
+              onTap: (index) => selectedTab = index,
+              currentUser: User(
+                id: 'admin-1',
+                name: 'Admin Utama',
+                employeeId: 'emp-admin',
+                email: 'admin@karyahr.com',
+                role: Role.admin,
+                isActive: true,
+                storeName: 'Sixbox Roastery',
+                isShift: false,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Beranda'), findsOneWidget);
+      expect(find.text('Karyawan'), findsOneWidget);
+      expect(find.text('Shift'), findsNothing); // Shift tidak muncul
+      expect(find.text('Approval'), findsOneWidget);
+      expect(find.text('Payroll'), findsOneWidget);
+      expect(find.text('Profil'), findsOneWidget);
+
+      // Tap tab Profil (indeks 4 saat isShift false)
+      await tester.tap(find.text('Profil'));
+      expect(selectedTab, 4);
     });
 
     testWidgets('Menampilkan komponen identitas owner dan pengaturan nama toko sesuai Stitch',
@@ -426,10 +478,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verifikasi Bottom Sheet terbuka (Stitch Viewport 4)
-      expect(find.text('Ubah Nama Toko'), findsOneWidget);
-      expect(find.text('Nama Toko Saat Ini'), findsOneWidget);
-      expect(find.text('Toko Modal Lama'), findsWidgets);
-      expect(find.text('Nama Toko Baru *'), findsOneWidget);
+      expect(find.text('Ubah Pengaturan Toko'), findsOneWidget);
+      expect(find.text('Nama Toko'), findsOneWidget);
+      expect(find.text('Sistem Shift'), findsOneWidget);
 
       // Edit nama toko di sheet
       await tester.enterText(
@@ -442,6 +493,58 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(authProvider.user?.storeName, 'Toko Modal Baru Barokah');
+    });
+
+    testWidgets(
+        'AdminShell _buildCurrentTab dinamis sesuai isShift (Approval, Payroll, Profil bergeser tepat)',
+        (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      fakeRepo.users['admin@karyahr.com'] = User(
+        id: 'admin-1',
+        name: 'Admin Utama',
+        employeeId: 'emp-admin',
+        email: 'admin@karyahr.com',
+        role: Role.admin,
+        isActive: true,
+        storeName: 'Sixbox Roastery',
+        isShift: false, // SHIFT NON-AKTIF
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final authProvider = AuthProvider(repository: fakeRepo);
+      await authProvider.login('admin@karyahr.com', 'password');
+
+      await tester.pumpWidget(
+        createTestApp(
+          authProvider: authProvider,
+          child: const AdminShell(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tab 0: Beranda
+      expect(find.byType(DashboardScreen), findsOneWidget);
+
+      // Tap Tab 1: Karyawan
+      await tester.tap(find.text('Karyawan'));
+      await tester.pumpAndSettle();
+      expect(find.byType(EmployeeListScreen), findsOneWidget);
+
+      // Tap Tab 2: Approval (karena Shift tidak ada, tab kedua setelah Karyawan adalah Approval!)
+      await tester.tap(find.text('Approval'));
+      await tester.pumpAndSettle();
+      expect(find.text('Pusat Persetujuan (Approval Center)'), findsOneWidget);
+
+      // Tap Tab 3: Payroll
+      await tester.tap(find.text('Payroll'));
+      await tester.pumpAndSettle();
+      expect(find.text('Periode Penggajian'), findsOneWidget);
+
+      // Tap Tab 4: Profil
+      await tester.tap(find.text('Profil'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfileView), findsOneWidget);
     });
   });
 }

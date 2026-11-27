@@ -9,9 +9,6 @@ import '../../../../core/config/app_constants.dart';
 import '../../../../core/config/enum.dart';
 import '../../../auth/presentation/provider/auth_provider.dart';
 
-/// Alias untuk tampilan profil lintas peran (Owner, Admin, Employee)
-typedef ProfileView = AdminProfileView;
-
 /// Tampilan Tab Profil Responsif & Role-Aware (Owner, Admin, Employee)
 /// Sesuai 100% dengan spesifikasi desain visual Stitch:
 /// - Screen ID: 58b96813084848c1860c65f97c76e904 (Tahap Profil — Profile & Account Management)
@@ -20,14 +17,17 @@ typedef ProfileView = AdminProfileView;
 /// - Viewport 3: Role EMPLOYEE Graceful Degradation (Banner akun belum tertaut NIK)
 /// - Viewport 4: Bottom Sheet Ubah Nama Toko (PUT /api/v1/auth/store)
 /// - Viewport 5: Bottom Sheet Ubah Kata Sandi (POST /api/v1/auth/change-password)
-class AdminProfileView extends StatefulWidget {
-  const AdminProfileView({super.key});
+/// Alias backward-compatibility untuk AdminProfileView
+typedef AdminProfileView = ProfileView;
+
+class ProfileView extends StatefulWidget {
+  const ProfileView({super.key});
 
   @override
-  State<AdminProfileView> createState() => _AdminProfileViewState();
+  State<ProfileView> createState() => _AdminProfileViewState();
 }
 
-class _AdminProfileViewState extends State<AdminProfileView> {
+class _AdminProfileViewState extends State<ProfileView> {
   // Palet Warna Resmi Stitch Design System
   static const Color _cSurface = Color(0xFFF8F9FF);
   static const Color _cCardBg = Colors.white;

@@ -12,7 +12,7 @@ import '../../attendance/presentation/admin/screens/daily_attendance_monitoring_
 import '../../dashboard/presentation/screens/dashboard_screen.dart';
 import '../../employee_management/presentation/screens/employee_list_screen.dart';
 import '../../shift/presentation/screens/shift_assignment_list_screen.dart';
-import 'widgets/admin_profile_view.dart';
+import 'widgets/profile_view.dart';
 
 /// Shell Navigasi Utama untuk Peran Admin & Owner
 /// Mendukung layout responsif (BottomNavigationBar pada Mobile, NavigationRail pada Tablet/Desktop).
@@ -57,10 +57,20 @@ class _AdminShellState extends State<AdminShell> {
       bottomNavigationBar: ValueListenableBuilder<int>(
         valueListenable: _currentIndex,
         builder: (context, currentIndex, child) {
-          return AppBottomNavBar(
-            currentIndex: currentIndex,
-            onTap: _onTabSelected,
-            role: AppNavRole.adminOrOwner,
+          return Selector<AuthProvider, User?>(
+            selector: (_, p) => p.user,
+            builder: (context, user, _) {
+              final navItems = user?.navItems ?? [];
+              final safeIndex = (currentIndex >= navItems.length)
+                  ? (navItems.isNotEmpty ? navItems.length - 1 : 0)
+                  : (currentIndex < 0 ? 0 : currentIndex);
+
+              return AppBottomNavBar(
+                currentIndex: safeIndex,
+                onTap: _onTabSelected,
+                currentUser: user,
+              );
+            },
           );
         },
       ),
@@ -73,60 +83,45 @@ class _AdminShellState extends State<AdminShell> {
       appBar: _buildAppBar(),
       body: Row(
         children: [
-          ValueListenableBuilder<int>(
-            valueListenable: _currentIndex,
-            builder: (context, currentIndex, child) {
-              return NavigationRail(
-                selectedIndex: currentIndex,
-                onDestinationSelected: _onTabSelected,
-                extended: isDesktop,
-                minExtendedWidth: 220,
-                backgroundColor: AppColors.surface,
-                selectedIconTheme: const IconThemeData(
-                  color: AppColors.primary,
-                ),
-                selectedLabelTextStyle: GoogleFonts.plusJakartaSans(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-                unselectedLabelTextStyle: GoogleFonts.inter(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                ),
-                destinations: const [
-                  NavigationRailDestination(
-                    icon: Icon(Icons.dashboard_outlined),
-                    selectedIcon: Icon(Icons.dashboard_rounded),
-                    label: Text('Beranda'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.people_alt_outlined),
-                    selectedIcon: Icon(Icons.people_alt_rounded),
-                    label: Text('Karyawan'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.schedule_outlined),
-                    selectedIcon: Icon(Icons.schedule_rounded),
-                    label: Text('Shift'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.fact_check_outlined),
-                    selectedIcon: Icon(Icons.fact_check_rounded),
-                    label: Text('Approval'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.payments_outlined),
-                    selectedIcon: Icon(Icons.payments_rounded),
-                    label: Text('Payroll'),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.person_outline_rounded),
-                    selectedIcon: Icon(Icons.person_rounded),
-                    label: Text('Profil'),
-                  ),
-                ],
+          Selector<AuthProvider, User?>(
+            selector: (_, p) => p.user,
+            builder: (context, user, _) {
+              final navItems = user?.navItems ?? [];
+              return ValueListenableBuilder<int>(
+                valueListenable: _currentIndex,
+                builder: (context, currentIndex, child) {
+                  final safeIndex = (currentIndex >= navItems.length)
+                      ? (navItems.isNotEmpty ? navItems.length - 1 : 0)
+                      : (currentIndex < 0 ? 0 : currentIndex);
+
+                  return NavigationRail(
+                    selectedIndex: safeIndex,
+                    onDestinationSelected: _onTabSelected,
+                    extended: isDesktop,
+                    minExtendedWidth: 220,
+                    backgroundColor: AppColors.surface,
+                    selectedIconTheme: const IconThemeData(
+                      color: AppColors.primary,
+                    ),
+                    selectedLabelTextStyle: GoogleFonts.plusJakartaSans(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                    unselectedLabelTextStyle: GoogleFonts.inter(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                    destinations: navItems.map((item) {
+                      return NavigationRailDestination(
+                        icon: Icon(item.inactiveIcon),
+                        selectedIcon: Icon(item.activeIcon),
+                        label: Text(item.label),
+                      );
+                    }).toList(),
+                  );
+                },
               );
             },
           ),
@@ -156,7 +151,8 @@ class _AdminShellState extends State<AdminShell> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      user?.storeName.isNotEmpty == true && user?.storeName != '-'
+                      user?.storeName.isNotEmpty == true &&
+                              user?.storeName != '-'
                           ? user!.storeName
                           : 'Sixbox HRIS',
                       style: GoogleFonts.plusJakartaSans(
@@ -200,7 +196,14 @@ class _AdminShellState extends State<AdminShell> {
     return ValueListenableBuilder<int>(
       valueListenable: _currentIndex,
       builder: (context, currentIndex, child) {
-        if (currentIndex == 1 && user?.canManage == true) {
+        final navItems = user?.navItems ?? [];
+        final safeIndex = (currentIndex >= 0 && currentIndex < navItems.length)
+            ? currentIndex
+            : 0;
+        final currentLabel =
+            navItems.isNotEmpty ? navItems[safeIndex].label : '';
+
+        if (currentLabel == 'Karyawan' && user?.canManage == true) {
           return ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -212,7 +215,6 @@ class _AdminShellState extends State<AdminShell> {
                 borderRadius: BorderRadius.circular(AppRadius.medium),
               ),
             ),
-
             icon: const Icon(Icons.add_rounded, size: 18),
             label: Text(
               'Tambah Karyawan',
@@ -225,7 +227,7 @@ class _AdminShellState extends State<AdminShell> {
           );
         }
 
-        if (currentIndex == 2 && user?.canManage == true) {
+        if (currentLabel == 'Shift' && user?.canManage == true) {
           return ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -258,25 +260,49 @@ class _AdminShellState extends State<AdminShell> {
   }
 
   Widget _buildCurrentTab() {
-    return ValueListenableBuilder<int>(
-      valueListenable: _currentIndex,
-      builder: (context, currentIndex, child) {
-        switch (currentIndex) {
-          case 0:
-            return const DashboardScreen(showAppBar: false);
-          case 1:
-            return const EmployeeListScreen();
-          case 2:
-            return const ShiftAssignmentListScreen();
-          case 3:
-            return _buildApprovalTab();
-          case 4:
-            return _buildPayrollTab();
-          case 5:
-            return const AdminProfileView();
-          default:
-            return const DashboardScreen(showAppBar: false);
-        }
+    return Selector<AuthProvider, User?>(
+      selector: (_, p) => p.user,
+      builder: (context, user, _) {
+        final navItems = user?.navItems ?? [];
+
+        return ValueListenableBuilder<int>(
+          valueListenable: _currentIndex,
+          builder: (context, currentIndex, child) {
+            // Koreksi otomatis jika currentIndex melebihi panjang navItems
+            // (misal isShift diubah dari true ke false saat di tab Profil)
+            final safeIndex = (currentIndex >= navItems.length)
+                ? (navItems.isNotEmpty ? navItems.length - 1 : 0)
+                : (currentIndex < 0 ? 0 : currentIndex);
+
+            if (_currentIndex.value != safeIndex) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _currentIndex.value = safeIndex;
+                }
+              });
+            }
+
+            final currentLabel =
+                navItems.isNotEmpty ? navItems[safeIndex].label : '';
+
+            switch (currentLabel) {
+              case 'Beranda':
+                return const DashboardScreen(showAppBar: false);
+              case 'Karyawan':
+                return const EmployeeListScreen();
+              case 'Shift':
+                return const ShiftAssignmentListScreen();
+              case 'Approval':
+                return _buildApprovalTab();
+              case 'Payroll':
+                return _buildPayrollTab();
+              case 'Profil':
+                return const ProfileView();
+              default:
+                return const DashboardScreen(showAppBar: false);
+            }
+          },
+        );
       },
     );
   }
@@ -309,10 +335,9 @@ class _AdminShellState extends State<AdminShell> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) =>
-                              const DailyAttendanceMonitoringScreen(
-                                showAppBar: true,
-                              ),
+                          builder: (_) => const DailyAttendanceMonitoringScreen(
+                            showAppBar: true,
+                          ),
                         ),
                       );
                     },

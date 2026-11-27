@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hris_app/core/config/app_constants.dart';
+import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
+import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/components/components.dart';
 import '../../../../core/shared/app_secure_storage.dart';
 import '../../../../core/shared/responsive_builder.dart';
 import '../../dashboard/presentation/screens/dashboard_screen.dart';
-import 'widgets/admin_profile_view.dart';
+import 'widgets/profile_view.dart';
 
 /// Shell Navigasi Utama untuk Peran Karyawan (Employee)
 /// Mendukung layout responsif (BottomNavigationBar pada Mobile, NavigationRail pada Tablet/Desktop).
@@ -77,10 +80,15 @@ class _EmployeeShellState extends State<EmployeeShell> {
       backgroundColor: AppColors.canvas,
       // appBar: _buildAppBar(),
       body: _buildCurrentTab(),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabSelected,
-        role: AppNavRole.employee,
+      bottomNavigationBar: Selector<AuthProvider, User?>(
+        selector: (_, p) => p.user,
+        builder: (context, user, _) {
+          return AppBottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabSelected,
+            currentUser: user,
+          );
+        },
       ),
     );
   }
@@ -433,7 +441,7 @@ class _EmployeeShellState extends State<EmployeeShell> {
   }
 
   Widget _buildProfileTab() {
-    return const AdminProfileView();
+    return const ProfileView();
   }
 
   Widget _buildStatItem(String value, String label, Color color) {
