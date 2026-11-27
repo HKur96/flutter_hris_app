@@ -68,7 +68,7 @@ class AdminDashboardView extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              'HW',
+              '${user?.initial}',
               style: GoogleFonts.plusJakartaSans(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
@@ -82,7 +82,7 @@ class AdminDashboardView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Halo, Hendra Wijaya',
+                  'Halo, ${user?.name ?? 'Pengguna'}',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -91,7 +91,7 @@ class AdminDashboardView extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Operasional HR & SDM',
+                  user?.position ?? 'Admin',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -108,7 +108,7 @@ class AdminDashboardView extends StatelessWidget {
               border: Border.all(color: AppColors.border),
             ),
             child: Text(
-              'ADMIN HR',
+              'ADMIN',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,

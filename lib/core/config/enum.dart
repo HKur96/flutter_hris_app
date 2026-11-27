@@ -21,7 +21,7 @@ enum Role {
       case admin:
         return 'Admin';
       default:
-        return 'Employee';
+        return 'Karyawan';
     }
   }
 }

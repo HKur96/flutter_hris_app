@@ -116,8 +116,8 @@ class _AppTextFieldState extends State<AppTextField> {
       children: [
         // Label Header
         if (widget.label != null) ...[
-          RichText(
-            text: TextSpan(
+          Text.rich(
+            TextSpan(
               text: widget.label,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
@@ -127,7 +127,7 @@ class _AppTextFieldState extends State<AppTextField> {
               children: [
                 if (widget.isRequired)
                   TextSpan(
-                    text: '*',
+                    text: ' *',
                     style: TextStyle(
                       color: AppColors.statusDanger,
                       fontWeight: FontWeight.bold,

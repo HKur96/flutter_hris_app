@@ -28,7 +28,7 @@ class EmployeeDashboardView extends StatefulWidget {
 
 class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
   late Timer _clockTimer;
-  DateTime _currentTime = DateTime.now();
+  final ValueNotifier<DateTime> _currentTime = ValueNotifier(DateTime.now());
   AttendanceCardState _attendanceState = AttendanceCardState.working;
 
   @override
@@ -36,9 +36,7 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
     super.initState();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        setState(() {
-          _currentTime = DateTime.now();
-        });
+        _currentTime.value = DateTime.now();
       }
     });
   }
@@ -46,6 +44,7 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
   @override
   void dispose() {
     _clockTimer.cancel();
+    _currentTime.dispose();
     super.dispose();
   }
 
@@ -110,7 +109,7 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
             ),
             alignment: Alignment.center,
             child: Text(
-              'AP',
+              widget.user?.initial ?? '',
               style: GoogleFonts.plusJakartaSans(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
@@ -124,7 +123,7 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Halo, Agus Prasetyo',
+                  'Halo, ${widget.user?.name}',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -133,7 +132,7 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Dapur & Produksi (Tetap)',
+                  '${widget.user?.position}',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -150,7 +149,7 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
               border: Border.all(color: AppColors.border),
             ),
             child: Text(
-              'EMPLOYEE',
+              '${widget.user?.role.display.toUpperCase()}',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -176,57 +175,59 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Shift & Badge State
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const MyShiftScheduleScreen(),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(AppRadius.small),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Jadwal Shift Anda',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: AppColors.textSecondary,
+          if (widget.user?.isShift == true) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const MyShiftScheduleScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Jadwal Shift Anda',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.chevron_right_rounded,
-                            size: 14,
-                            color: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Shift Pagi (08:00 — 17:00 WIB)',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          'Shift Pagi (08:00 — 17:00 WIB)',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              _buildStateBadge(),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.space12),
+                _buildStateBadge(),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.space12),
+          ],
 
           // Digital Live Clock & GPS Verification Box
           InkWell(
@@ -249,71 +250,76 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
                 borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      _formatLiveClock(_currentTime),
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: 1.0,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      ValueListenableBuilder<DateTime>(
+                        valueListenable: _currentTime,
+                        builder: (context, time, _) {
+                          return Text(
+                            _formatLiveClock(time),
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 1.0,
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'WIB',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                      const SizedBox(width: 6),
+                      Text(
+                        'WIB',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.pin_drop_rounded,
-                      size: 15,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Radius Valid: 8m dari Toko Pusat',
-                      style: GoogleFonts.inter(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.pin_drop_rounded,
+                        size: 15,
                         color: AppColors.primary,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _attendanceState == AttendanceCardState.working
-                      ? 'Check-In tercatat: 06:55 WIB (Tepat Waktu)'
-                      : _attendanceState == AttendanceCardState.standby
-                      ? 'Siap melakukan rekam presensi masuk'
-                      : _attendanceState == AttendanceCardState.completed
-                      ? 'Presensi hari ini telah tuntas tercatat'
-                      : 'Tidak ada shift hari ini (Libur berkala)',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
+                      const SizedBox(width: 4),
+                      Text(
+                        'Radius Valid: 8m dari Toko Pusat',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    _attendanceState == AttendanceCardState.working
+                        ? 'Check-In tercatat: 06:55 WIB (Tepat Waktu)'
+                        : _attendanceState == AttendanceCardState.standby
+                        ? 'Siap melakukan rekam presensi masuk'
+                        : _attendanceState == AttendanceCardState.completed
+                        ? 'Presensi hari ini telah tuntas tercatat'
+                        : 'Tidak ada shift hari ini (Libur berkala)',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.space12),
+          const SizedBox(height: AppSpacing.space12),
 
           // Primary Bottom Ergonomic Button (Thumb Tap)
           _buildActionButton(context),
@@ -417,9 +423,8 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
             ),
           ),
           onPressed: () async {
-            final res = await Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ClockInScreen()),
-            );
+            final res = await Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const ClockInScreen()));
             if (res == true && mounted) {
               setState(() {
                 _attendanceState = AttendanceCardState.working;
@@ -452,9 +457,9 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
             ),
           ),
           onPressed: () async {
-            final res = await Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ClockOutScreen()),
-            );
+            final res = await Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const ClockOutScreen()));
             if (res == true && mounted) {
               setState(() {
                 _attendanceState = AttendanceCardState.completed;
@@ -721,7 +726,10 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
             Container(
               width: 7,
               height: 7,
-              decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+              ),
             ),
             const SizedBox(width: AppSpacing.space10),
             Expanded(

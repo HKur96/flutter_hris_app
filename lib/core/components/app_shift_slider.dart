@@ -35,8 +35,8 @@ class AppShiftSlider extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (label != null) ...[
-          RichText(
-            text: TextSpan(
+          Text.rich(
+            TextSpan(
               text: label,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,

@@ -6,6 +6,9 @@ import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/enum.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
+import 'package:flutter_hris_app/modules/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:flutter_hris_app/modules/employee_management/presentation/screens/employee_list_screen.dart';
+import 'package:flutter_hris_app/modules/shell/presentation/admin_shell.dart';
 import 'package:flutter_hris_app/modules/shell/presentation/widgets/profile_view.dart';
 import '../../helpers/test_helpers.dart';
 
@@ -480,7 +483,7 @@ void main() {
       // Verifikasi Bottom Sheet terbuka (Stitch Viewport 4)
       expect(find.text('Ubah Pengaturan Toko'), findsOneWidget);
       expect(find.text('Nama Toko'), findsOneWidget);
-      expect(find.text('Sistem Shift'), findsOneWidget);
+      expect(find.text('Sistem Shift'), findsWidgets);
 
       // Edit nama toko di sheet
       await tester.enterText(

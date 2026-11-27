@@ -21,22 +21,20 @@ class EmployeeShell extends StatefulWidget {
 }
 
 class _EmployeeShellState extends State<EmployeeShell> {
-  int _currentIndex = 0;
-  String _userEmail = 'Karyawan';
+  final ValueNotifier<int> _currentIndex = ValueNotifier(0);
 
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().refreshProfile();
+    });
   }
 
-  Future<void> _loadUserInfo() async {
-    final user = await AppSecureStorage().currentUser;
-    if (user != null && mounted) {
-      setState(() {
-        _userEmail = user.email;
-      });
-    }
+  @override
+  void dispose() {
+    _currentIndex.dispose();
+    super.dispose();
   }
 
   Future<void> _handleLogout() async {
@@ -57,10 +55,8 @@ class _EmployeeShellState extends State<EmployeeShell> {
   }
 
   void _onTabSelected(int index) {
-    if (_currentIndex != index) {
-      setState(() {
-        _currentIndex = index;
-      });
+    if (_currentIndex.value != index) {
+      _currentIndex.value = index;
     }
   }
 
@@ -76,81 +72,128 @@ class _EmployeeShellState extends State<EmployeeShell> {
   }
 
   Widget _buildMobileLayout() {
-    return Scaffold(
-      backgroundColor: AppColors.canvas,
-      // appBar: _buildAppBar(),
-      body: _buildCurrentTab(),
-      bottomNavigationBar: Selector<AuthProvider, User?>(
-        selector: (_, p) => p.user,
-        builder: (context, user, _) {
-          return AppBottomNavBar(
-            currentIndex: _currentIndex,
-            onTap: _onTabSelected,
-            currentUser: user,
-          );
-        },
-      ),
+    return ValueListenableBuilder<int>(
+      valueListenable: _currentIndex,
+      builder: (context, currentIndex, child) {
+        return Scaffold(
+          backgroundColor: AppColors.canvas,
+          // appBar: _buildAppBar(),
+          body: _buildCurrentTab(currentIndex),
+          bottomNavigationBar: Selector<AuthProvider, User?>(
+            selector: (_, p) => p.user,
+            builder: (context, user, _) {
+              return AppBottomNavBar(
+                currentIndex: currentIndex,
+                onTap: _onTabSelected,
+                currentUser: user,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
   Widget _buildWideLayout({required bool isDesktop}) {
-    return Scaffold(
-      backgroundColor: AppColors.canvas,
-      appBar: _buildAppBar(),
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: _onTabSelected,
-            extended: isDesktop,
-            minExtendedWidth: 200,
-            backgroundColor: AppColors.surface,
-            selectedIconTheme: const IconThemeData(color: AppColors.primary),
-            selectedLabelTextStyle: GoogleFonts.plusJakartaSans(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-            unselectedLabelTextStyle: GoogleFonts.inter(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
-            ),
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.access_time_rounded),
-                selectedIcon: Icon(Icons.access_time_filled_rounded),
-                label: Text('Presensi'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.event_available_outlined),
-                selectedIcon: Icon(Icons.event_available_rounded),
-                label: Text('Cuti & Izin'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long_rounded),
-                label: Text('Slip Gaji'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: Text('Profil'),
-              ),
-            ],
+    return Selector<AuthProvider, User?>(
+      selector: (_, p) => p.user,
+      builder: (context, user, _) {
+        final navItems = user?.navItems ?? const [
+          AppNavItem(
+            label: 'Beranda',
+            activeIcon: Icons.dashboard_rounded,
+            inactiveIcon: Icons.dashboard_outlined,
           ),
-          const VerticalDivider(
-            width: 1,
-            thickness: 1,
-            color: AppColors.border,
+          AppNavItem(
+            label: 'Cuti & Izin',
+            activeIcon: Icons.event_available_rounded,
+            inactiveIcon: Icons.event_available_outlined,
           ),
-          Expanded(child: _buildCurrentTab()),
-        ],
-      ),
+          AppNavItem(
+            label: 'Slip Gaji',
+            activeIcon: Icons.receipt_long_rounded,
+            inactiveIcon: Icons.receipt_long_outlined,
+          ),
+          AppNavItem(
+            label: 'Profil',
+            activeIcon: Icons.person_rounded,
+            inactiveIcon: Icons.person_outline_rounded,
+          ),
+        ];
+
+        return ValueListenableBuilder<int>(
+          valueListenable: _currentIndex,
+          builder: (context, currentIndex, _) {
+            final safeIndex = (currentIndex >= navItems.length)
+                ? (navItems.isNotEmpty ? navItems.length - 1 : 0)
+                : (currentIndex < 0 ? 0 : currentIndex);
+
+            return Scaffold(
+              backgroundColor: AppColors.canvas,
+              appBar: _buildAppBar(user),
+              body: Row(
+                children: [
+                  NavigationRail(
+                    selectedIndex: safeIndex,
+                    onDestinationSelected: _onTabSelected,
+                    extended: true,
+                    minExtendedWidth: 190,
+                    minWidth: 16,
+                    useIndicator: false,
+                    backgroundColor: AppColors.surface,
+                    leading: const SizedBox(height: 8),
+                    destinations: List.generate(navItems.length, (index) {
+                      final item = navItems[index];
+                      final isSelected = index == safeIndex;
+
+                      return NavigationRailDestination(
+                        icon: const SizedBox.shrink(),
+                        selectedIcon: const SizedBox.shrink(),
+                        label: Container(
+                          width: 154,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.brand50
+                                : Colors.transparent,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
+                          ),
+                          child: Text(
+                            item.label,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: AppColors.border,
+                  ),
+                  Expanded(child: _buildCurrentTab(safeIndex)),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(User? user) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -187,7 +230,7 @@ class _EmployeeShellState extends State<EmployeeShell> {
                 ),
               ),
               Text(
-                _userEmail,
+                user?.email ?? '',
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   color: AppColors.textSecondary,
@@ -218,8 +261,8 @@ class _EmployeeShellState extends State<EmployeeShell> {
     );
   }
 
-  Widget _buildCurrentTab() {
-    switch (_currentIndex) {
+  Widget _buildCurrentTab(int currentIndex) {
+    switch (currentIndex) {
       case 0:
         return const DashboardScreen();
       case 1:

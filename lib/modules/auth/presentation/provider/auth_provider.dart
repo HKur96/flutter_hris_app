@@ -256,7 +256,10 @@ class AuthProvider with ChangeNotifier {
         _user = r;
         notifyListeners();
       });
-    } catch (_) {}
+    } catch (_) {
+      _user = await AppSecureStorage().readUser();
+      notifyListeners();
+    }
   }
 
   /// Menghapus sesi login dan kredensial pengguna

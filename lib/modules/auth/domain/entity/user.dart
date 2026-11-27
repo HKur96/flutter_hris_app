@@ -34,6 +34,25 @@ class User extends Equatable {
     this.department,
   });
 
+  String get initial {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((n) => n.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return '';
+
+    if (parts.length == 1) {
+      final word = parts[0];
+      // Mengambil 2 huruf pertama jika panjang kata >= 2, atau 1 huruf jika hanya 1 karakter
+      return (word.length >= 2 ? word.substring(0, 2) : word).toUpperCase();
+    }
+
+    // Mengambil huruf pertama dari kata ke-1 dan kata ke-2
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+  }
+
   bool get canManage => role == Role.admin || role == Role.owner;
 
   List<AppNavItem> get navItems => role == Role.employee

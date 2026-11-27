@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hris_app/core/components/app_shift_slider.dart';
-import 'package:flutter_hris_app/core/components/app_text_field.dart';
 import 'package:flutter_hris_app/core/components/components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -54,7 +52,10 @@ class _AdminProfileViewState extends State<ProfileView> {
     if (trimmed.isEmpty) return;
 
     final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.updateStoreName(trimmed, isShift: isShift);
+    final success = await authProvider.updateStoreName(
+      trimmed,
+      isShift: isShift,
+    );
 
     if (!mounted) return;
 
@@ -63,7 +64,8 @@ class _AdminProfileViewState extends State<ProfileView> {
         content: Text(
           success
               ? 'Pengaturan toko berhasil diperbarui'
-              : (authProvider.errorMessage ?? 'Gagal memperbarui pengaturan toko.'),
+              : (authProvider.errorMessage ??
+                    'Gagal memperbarui pengaturan toko.'),
           style: GoogleFonts.inter(fontSize: 12.5),
         ),
         backgroundColor: success ? _cPrimaryContainer : const Color(0xFFBA1A1A),
@@ -355,14 +357,12 @@ class _AdminProfileViewState extends State<ProfileView> {
                   onChanged: (_) => setSheetState(() {}),
                 ),
                 const SizedBox(height: 14),
-                RichText(
-                  text: TextSpan(
-                    text: 'Sistem Shift',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                Text(
+                  'Sistem Shift',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -431,7 +431,7 @@ class _AdminProfileViewState extends State<ProfileView> {
                             );
                           },
                           child: Text(
-                            'Simpan',
+                            'Simpan Perubahan',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -530,7 +530,7 @@ class _AdminProfileViewState extends State<ProfileView> {
                     isPassword: true,
                     isRequired: true,
                     label: 'Kata Sandi Saat Ini',
-                    hintText: 'Masukkan Kata Sandi Saat Ini',
+                    hintText: 'Masukkan kata sandi saat ini',
                     validator: (val) {
                       if (val == null || val.isEmpty) {
                         return 'Kata sandi saat ini wajib diisi';
@@ -547,7 +547,7 @@ class _AdminProfileViewState extends State<ProfileView> {
                     isPassword: true,
                     isRequired: true,
                     label: 'Kata Sandi Baru',
-                    hintText: 'Masukkan Kata Sandi Baru',
+                    hintText: 'Minimal 8 karakter',
                     validator: (val) {
                       if (val == null || val.isEmpty) {
                         return 'Kata sandi baru wajib diisi';
@@ -580,6 +580,19 @@ class _AdminProfileViewState extends State<ProfileView> {
                       return null;
                     },
                     onChanged: (_) => setSheetState(() {}),
+                    onSubmitted: (_) async {
+                      if (!passwordFormKey.currentState!.validate()) {
+                        return;
+                      }
+                      setSheetState(() => isSubmitting = true);
+                      final oldPass = oldPasswordController.text.trim();
+                      final newPass = newPasswordController.text.trim();
+                      Navigator.of(bottomSheetCtx).pop();
+                      await _handleChangePassword(
+                        oldPassword: oldPass,
+                        newPassword: newPass,
+                      );
+                    },
                   ),
                   const SizedBox(height: 20),
 
@@ -1110,11 +1123,11 @@ class _AdminProfileViewState extends State<ProfileView> {
                 const SizedBox(height: 16),
               ],
 
-              // INFORMASI PERUSAHAAN (Strict Read-Only Enforcement untuk Employee)
+              // TEMPAT BEKERJA (Strict Read-Only Enforcement untuk Employee)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSectionHeader('INFORMASI PERUSAHAAN'),
+                  _buildSectionHeader('TEMPAT BEKERJA'),
                   Padding(
                     padding: const EdgeInsets.only(right: 4, bottom: 6),
                     child: Row(

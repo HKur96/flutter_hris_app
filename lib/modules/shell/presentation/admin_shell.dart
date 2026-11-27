@@ -27,6 +27,14 @@ class _AdminShellState extends State<AdminShell> {
   final ValueNotifier<int> _currentIndex = ValueNotifier(0);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthProvider>().refreshProfile();
+    });
+  }
+
+  @override
   void dispose() {
     _currentIndex.dispose();
     super.dispose();
@@ -97,29 +105,47 @@ class _AdminShellState extends State<AdminShell> {
                   return NavigationRail(
                     selectedIndex: safeIndex,
                     onDestinationSelected: _onTabSelected,
-                    extended: isDesktop,
-                    minExtendedWidth: 220,
+                    extended: true,
+                    minExtendedWidth: 190,
+                    minWidth: 16,
+                    useIndicator: false,
                     backgroundColor: AppColors.surface,
-                    selectedIconTheme: const IconThemeData(
-                      color: AppColors.primary,
-                    ),
-                    selectedLabelTextStyle: GoogleFonts.plusJakartaSans(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                    unselectedLabelTextStyle: GoogleFonts.inter(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
-                    destinations: navItems.map((item) {
+                    leading: const SizedBox(height: 8),
+                    destinations: List.generate(navItems.length, (index) {
+                      final item = navItems[index];
+                      final isSelected = index == safeIndex;
+
                       return NavigationRailDestination(
-                        icon: Icon(item.inactiveIcon),
-                        selectedIcon: Icon(item.activeIcon),
-                        label: Text(item.label),
+                        icon: const SizedBox.shrink(),
+                        selectedIcon: const SizedBox.shrink(),
+                        label: Container(
+                          width: 154,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 11,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.brand50
+                                : Colors.transparent,
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.medium),
+                          ),
+                          child: Text(
+                            item.label,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 13,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
                       );
-                    }).toList(),
+                    }),
                   );
                 },
               );
@@ -200,8 +226,9 @@ class _AdminShellState extends State<AdminShell> {
         final safeIndex = (currentIndex >= 0 && currentIndex < navItems.length)
             ? currentIndex
             : 0;
-        final currentLabel =
-            navItems.isNotEmpty ? navItems[safeIndex].label : '';
+        final currentLabel = navItems.isNotEmpty
+            ? navItems[safeIndex].label
+            : '';
 
         if (currentLabel == 'Karyawan' && user?.canManage == true) {
           return ElevatedButton.icon(
@@ -282,8 +309,9 @@ class _AdminShellState extends State<AdminShell> {
               });
             }
 
-            final currentLabel =
-                navItems.isNotEmpty ? navItems[safeIndex].label : '';
+            final currentLabel = navItems.isNotEmpty
+                ? navItems[safeIndex].label
+                : '';
 
             switch (currentLabel) {
               case 'Beranda':
@@ -419,7 +447,7 @@ class _AdminShellState extends State<AdminShell> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppCard(
-            title: 'Periode Penggajian Berjalan',
+            title: 'Periode Penggajian',
             trailing: const AppBadge.pending(label: 'Status: DRAFT'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

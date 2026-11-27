@@ -33,7 +33,10 @@ class MyShiftScheduleScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Column(
@@ -62,7 +65,10 @@ class MyShiftScheduleScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(right: 16),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(AppRadius.small),
@@ -148,7 +154,9 @@ class MyShiftScheduleScreen extends StatelessWidget {
               else if (myAssignments.isEmpty)
                 _buildEmptyState()
               else
-                ...myAssignments.map((assignment) => _buildScheduleCard(assignment)),
+                ...myAssignments.map(
+                  (assignment) => _buildScheduleCard(assignment),
+                ),
             ],
           ),
         ),
@@ -252,7 +260,10 @@ class MyShiftScheduleScreen extends StatelessWidget {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: assignment.isOvernight
                       ? const Color(0xFFF3E8FF)

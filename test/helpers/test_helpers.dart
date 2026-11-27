@@ -155,7 +155,7 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<BaseException, String>> updateStoreName(
+  Future<Either<BaseException, String>> updateStoreSettings(
     String storeName, {
     bool? isShift,
   }) async {
