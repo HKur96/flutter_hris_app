@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../modules/attendance/presentation/admin/screens/correction_approval_screen.dart';
+import '../../modules/attendance/presentation/admin/screens/daily_attendance_monitoring_screen.dart';
 import '../../modules/employee_management/presentation/screens/employee_list_screen.dart';
 
 class AdminRoutes {
@@ -19,5 +21,9 @@ class AdminRoutes {
 
   static Map<String, WidgetBuilder> get routes => {
     employeeManagement: (context) => const EmployeeListScreen(showAppBar: true),
+    attendanceReport: (context) =>
+        const DailyAttendanceMonitoringScreen(showAppBar: true),
+    attendanceCorrectionApproval: (context) =>
+        const CorrectionApprovalScreen(),
   };
 }

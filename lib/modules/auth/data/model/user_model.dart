@@ -15,6 +15,7 @@ class UserModel extends User {
     super.nik,
     super.position,
     super.department,
+    super.isShift = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -25,7 +26,8 @@ class UserModel extends User {
     return UserModel(
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? (json['role'] == 'owner' ? 'Owner' : 'Pengguna'),
-      employeeId: json['employee_id']?.toString() ??
+      employeeId:
+          json['employee_id']?.toString() ??
           (employeeData?['id']?.toString() ?? ''),
       email: json['email'] ?? '',
       role: Role.fromValue(json['role']?.toString() ?? 'employee'),
@@ -37,16 +39,20 @@ class UserModel extends User {
       updatedAt: json['updated_at'] != null
           ? (DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now())
           : DateTime.now(),
-      nik: json['nik']?.toString() ??
+      nik:
+          json['nik']?.toString() ??
           employeeData?['nik']?.toString() ??
           (json['employee_id']?.toString().isNotEmpty == true
               ? json['employee_id'].toString()
               : null),
-      position: json['position']?.toString() ??
+      position:
+          json['position']?.toString() ??
           employeeData?['position']?.toString() ??
           employeeData?['job_title']?.toString(),
-      department: json['department']?.toString() ??
+      department:
+          json['department']?.toString() ??
           employeeData?['department']?.toString(),
+      isShift: json['is_shift'] == true,
     );
   }
 
@@ -63,6 +69,7 @@ class UserModel extends User {
     'nik': nik,
     'position': position,
     'department': department,
+    'is_shift': isShift,
   };
 
   @override
@@ -74,6 +81,7 @@ class UserModel extends User {
     Role? role,
     bool? isActive,
     String? storeName,
+    bool? isShift,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? nik,
@@ -88,6 +96,7 @@ class UserModel extends User {
       role: role ?? this.role,
       isActive: isActive ?? this.isActive,
       storeName: storeName ?? this.storeName,
+      isShift: isShift ?? this.isShift,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       nik: nik ?? this.nik,

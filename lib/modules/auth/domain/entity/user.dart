@@ -9,6 +9,7 @@ class User extends Equatable {
   final Role role;
   final bool isActive;
   final String storeName;
+  final bool isShift;
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? nik;
@@ -23,6 +24,7 @@ class User extends Equatable {
     required this.role,
     required this.isActive,
     required this.storeName,
+    this.isShift = true,
     required this.createdAt,
     required this.updatedAt,
     this.nik,
@@ -40,6 +42,7 @@ class User extends Equatable {
     Role? role,
     bool? isActive,
     String? storeName,
+    bool? isShift,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? nik,
@@ -54,6 +57,7 @@ class User extends Equatable {
       role: role ?? this.role,
       isActive: isActive ?? this.isActive,
       storeName: storeName ?? this.storeName,
+      isShift: isShift ?? this.isShift,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       nik: nik ?? this.nik,
@@ -71,6 +75,7 @@ class User extends Equatable {
     role,
     isActive,
     storeName,
+    isShift,
     createdAt,
     updatedAt,
     nik,

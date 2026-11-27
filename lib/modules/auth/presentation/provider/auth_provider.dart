@@ -6,7 +6,7 @@ import 'package:flutter_hris_app/core/config/global.dart';
 import 'package:flutter_hris_app/core/shared/app_secure_storage.dart';
 import 'package:flutter_hris_app/modules/auth/data/model/user_model.dart';
 import 'package:flutter_hris_app/modules/auth/data/repository/auth_repository_impl.dart';
-import 'package:flutter_hris_app/modules/auth/domain/auth_repository.dart';
+import 'package:flutter_hris_app/modules/auth/domain/repository/auth_repository.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/setup_status.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart' as au;
 
@@ -135,14 +135,17 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Memperbarui nama toko / usaha milik akun Admin atau Owner via PUT /api/v1/auth/store
-  Future<bool> updateStoreName(String newStoreName) async {
+  /// Memperbarui nama toko / usaha & opsi sistem shift milik akun Admin atau Owner via PUT /api/v1/auth/store
+  Future<bool> updateStoreName(String newStoreName, {bool? isShift}) async {
     if (_user == null) return false;
     try {
       _errorMessage = null;
       notifyListeners();
 
-      final res = await _repository.updateStoreName(newStoreName);
+      final res = await _repository.updateStoreSettings(
+        newStoreName,
+        isShift: isShift,
+      );
 
       bool isSuccess = true;
       String finalName = newStoreName;
@@ -165,6 +168,7 @@ class AuthProvider with ChangeNotifier {
 
       final updatedUser = _user!.copyWith(
         storeName: finalName,
+        isShift: isShift ?? _user!.isShift,
         updatedAt: DateTime.now(),
       );
       _user = updatedUser;
@@ -177,6 +181,7 @@ class AuthProvider with ChangeNotifier {
         role: updatedUser.role,
         isActive: updatedUser.isActive,
         storeName: updatedUser.storeName,
+        isShift: updatedUser.isShift,
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
         nik: updatedUser.nik,

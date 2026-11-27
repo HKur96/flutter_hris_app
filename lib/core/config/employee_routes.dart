@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/attendance_history_screen.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/clock_in_screen.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/clock_out_screen.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/today_attendance_screen.dart';
 
 class EmployeeRoutes {
   static const String home = '/employee/home';
@@ -25,24 +29,9 @@ class EmployeeRoutes {
       '/employee/notification-preferences';
 
   static Map<String, WidgetBuilder> get routes => {
-    // home: (context) => EmployeeHomeScreen(),
-    // attendanceMain: (context) => AttendanceMainScreen(),
-    // attendanceDetail: (context) => AttendanceDetailScreen(),
-    // clockinFlow: (context) => ClockinFlowScreen(),
-    // clockoutFlow: (context) => ClockoutFlowScreen(),
-    // attendanceCorrection: (context) => AttendanceCorrectionScreen(),
-    // requestsMain: (context) => RequestMainScreen(),
-    // leaveRequestForm: (context) => LeaveRequestFormScreen(),
-    // leaveRequestDetail: (context) => LeaveRequestDetailScreen(),
-    // overtimeRequestForm: (context) => const OvertimeRequestFormScreen(),
-    // overtimeRequestDetail: (context) => const OvertimeRequestDetailScreen(),
-    // correctionRequestDetail: (context) => const CorrectionRequestDetailScreen(),
-    // documentsMain: (context) => const DocumentsMainScreen(),
-    // payslipDetail: (context) => const PayslipDetailScreen(),
-    // profile: (context) => const EmployeeProfileScreen(),
-    // personalInfo: (context) => const PersonalInformationScreen(),
-    // accountSecurity: (context) => const AccountSecurityScreen(),
-    // applicationSettings: (context) => const ApplicationSettingsScreen(),
-    // notificationPreferences: (context) => const NotificationPreferencesScreen(),
+    attendanceMain: (context) => const TodayAttendanceScreen(),
+    attendanceDetail: (context) => const AttendanceHistoryScreen(),
+    clockinFlow: (context) => const ClockInScreen(),
+    clockoutFlow: (context) => const ClockOutScreen(),
   };
 }

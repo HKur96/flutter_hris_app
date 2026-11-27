@@ -434,36 +434,14 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
 
 ---
 
-### 4.4. Update Nama Toko Eksplisit (`PUT /api/v1/auth/store`)
+### 4.4. Pengaturan Toko & Toggle Shift (`GET` & `PUT /api/v1/store-settings`)
 
-- **Method:** `PUT` (atau `POST` dengan `_method: "PUT"`)
-- **Path:** `/api/v1/auth/store`
-- **Role:** `OWNER`, `ADMIN`
-- **Request Payload:**
-  ```json
-  {
-    "auth_token": "<JWT_TOKEN>",
-    "store_name": "PT Retail Nusantara Utama"
-  }
-  ```
-- **Contoh Response (200):**
-  ```json
-  {
-    "success": true,
-    "status": 200,
-    "data": {
-      "message": "Store name updated successfully",
-      "store_name": "PT Retail Nusantara Utama"
-    }
-  }
-  ```
+Mendapatkan dan memperbarui konfigurasi toko, toggle fitur shift (`is_shift`), jam kerja default reguler (misal 9 to 5), dan toleransi keterlambatan.
 
----
-
-### 4.5. Ambil Profil Nama Toko (`GET /api/v1/auth/store`)
+#### A. Ambil Pengaturan Toko (`GET /api/v1/store-settings` atau `GET /api/v1/auth/store`)
 
 - **Method:** `GET`
-- **Path:** `/api/v1/auth/store`
+- **Path:** `/api/v1/store-settings` (atau alias `/api/v1/auth/store`)
 - **Role:** Publik / Terautentikasi
 - **Contoh Response (200):**
   ```json
@@ -471,7 +449,56 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
     "success": true,
     "status": 200,
     "data": {
-      "store_name": "PT Retail Nusantara Utama"
+      "id": "default",
+      "store_name": "PT Retail Nusantara Utama",
+      "is_shift": true,
+      "default_start_time": "09:00",
+      "default_end_time": "17:00",
+      "late_tolerance_minutes": 15,
+      "created_at": "2026-11-27T06:07:59.303Z",
+      "updated_at": "2026-11-27T06:07:59.303Z"
+    },
+    "meta": {
+      "message": "Success",
+      "timestamp": "2026-11-27T06:07:59.452Z"
+    }
+  }
+  ```
+
+#### B. Update Pengaturan Toko (`PUT /api/v1/store-settings` atau `PUT /api/v1/auth/store`)
+
+- **Method:** `PUT` (atau `POST` dengan `_method: "PUT"`)
+- **Path:** `/api/v1/store-settings` (atau alias `/api/v1/auth/store`)
+- **Role:** `OWNER`, `ADMIN`
+- **Request Payload:**
+  ```json
+  {
+    "auth_token": "<JWT_TOKEN>",
+    "store_name": "PT Retail Nusantara Utama",
+    "is_shift": false,
+    "default_start_time": "09:00",
+    "default_end_time": "17:00",
+    "late_tolerance_minutes": 15
+  }
+  ```
+- **Contoh Response (200):**
+  ```json
+  {
+    "success": true,
+    "status": 200,
+    "data": {
+      "id": "default",
+      "store_name": "PT Retail Nusantara Utama",
+      "is_shift": false,
+      "default_start_time": "09:00",
+      "default_end_time": "17:00",
+      "late_tolerance_minutes": 15,
+      "created_at": "2026-11-27T06:07:59.303Z",
+      "updated_at": "2026-11-27T06:08:00.132Z"
+    },
+    "meta": {
+      "message": "Store settings updated successfully",
+      "timestamp": "2026-11-27T06:08:00.221Z"
     }
   }
   ```
@@ -512,6 +539,7 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
         "role": "EMPLOYEE",
         "employee_id": "e4b5f8c2-3e44-4f81-a589-918237461234",
         "store_name": "Toko Berkah Abadi",
+        "is_shift": true,
         "is_active": true,
         "employee": {
           "id": "e4b5f8c2-3e44-4f81-a589-918237461234",
@@ -542,6 +570,7 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
         "role": "OWNER",
         "employee_id": null,
         "store_name": "Toko Berkah Abadi",
+        "is_shift": true,
         "is_active": true
       }
     }
@@ -721,6 +750,12 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
 
 ## 5. Modul 3: Jadwal Shift (`shifts`)
 
+> [!NOTE]
+> **Perilaku Ketika Toko Menonaktifkan Fitur Shift (`is_shift = false`):**
+>
+> - `GET /api/v1/shifts` mengembalikan array kosong `data: []` dengan meta `"is_shift": false` dan pesan `"Fitur shift dinonaktifkan untuk toko ini."`.
+> - Endpoint mutasi (`POST /api/v1/shifts`, `PUT /api/v1/shifts/:id`) ditolak dengan status `400 Bad Request` dan kode error `SHIFT_FEATURE_DISABLED`.
+
 ### 5.1. Create Shift (`POST /api/v1/shifts`)
 
 - **Method:** `POST`
@@ -805,6 +840,12 @@ Cloudflare Workers REST API berjalan di atas infrastruktur Cloudflare Global Edg
 ---
 
 ## 6. Modul 4: Penugasan Shift (`shift_assignments`)
+
+> [!NOTE]
+> **Perilaku Ketika Toko Menonaktifkan Fitur Shift (`is_shift = false`):**
+>
+> - `GET /api/v1/shift-assignments` mengembalikan array kosong `data: []` dengan meta `"is_shift": false` dan pesan `"Fitur shift dinonaktifkan untuk toko ini."`.
+> - Endpoint mutasi penugasan shift (`POST .../bulk`, `PUT .../bulk`, `PUT .../:id`, `DELETE .../:id`) ditolak dengan status `400 Bad Request` dan kode error `SHIFT_FEATURE_DISABLED`.
 
 ### 6.1. Single Shift Assignment (`POST /api/v1/shift-assignments`) — [NONAKTIF / DISABLED]
 

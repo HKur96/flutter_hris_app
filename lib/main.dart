@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hris_app/core/config/app_constants.dart';
 import 'package:flutter_hris_app/core/config/global.dart';
+import 'package:flutter_hris_app/modules/attendance/data/repository/attendance_repository_impl.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/provider/attendance_provider.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/initial_owner_setup_screen.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/screens/login_screen.dart';
@@ -51,6 +53,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => EmployeeManagementProvider()),
         ChangeNotifierProvider(create: (_) => ShiftProvider()),
         ChangeNotifierProvider(create: (_) => ShiftAssignmentProvider()),
+        ChangeNotifierProvider(
+          create: (_) =>
+              AttendanceProvider(repository: AttendanceRepositoryImpl()),
+        ),
       ],
       child: MaterialApp(
         title: 'KaryaHR Mobile',

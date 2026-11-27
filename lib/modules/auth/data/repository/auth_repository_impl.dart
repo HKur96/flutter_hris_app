@@ -11,7 +11,7 @@ import 'package:flutter_hris_app/modules/auth/data/model/setup_status_model.dart
 import 'package:flutter_hris_app/modules/auth/data/model/user_model.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/setup_status.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
-import 'package:flutter_hris_app/modules/auth/domain/auth_repository.dart';
+import 'package:flutter_hris_app/modules/auth/domain/repository/auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -132,13 +132,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<BaseException, String>> updateStoreName(String storeName) async {
+  Future<Either<BaseException, String>> updateStoreSettings(
+    String storeName, {
+    bool? isShift,
+  }) async {
     try {
       final response = await _dioHelper.putRequest(
         'api/v1/auth/store',
         requestBody: {
           'name': storeName,
           'store_name': storeName,
+          'is_shift': ?isShift,
         },
       );
 

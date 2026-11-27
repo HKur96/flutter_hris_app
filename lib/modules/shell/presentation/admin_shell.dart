@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/components/components.dart';
 import '../../../../core/shared/responsive_builder.dart';
+import '../../attendance/presentation/admin/screens/daily_attendance_monitoring_screen.dart';
 import '../../dashboard/presentation/screens/dashboard_screen.dart';
 import '../../employee_management/presentation/screens/employee_list_screen.dart';
 import '../../shift/presentation/screens/shift_assignment_list_screen.dart';
@@ -297,6 +298,24 @@ class _AdminShellState extends State<AdminShell> {
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.space12),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton.secondary(
+                    text: 'Buka Data Presensi Tim',
+                    icon: const Icon(Icons.rule_folder_rounded, size: 16),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const DailyAttendanceMonitoringScreen(
+                                showAppBar: true,
+                              ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

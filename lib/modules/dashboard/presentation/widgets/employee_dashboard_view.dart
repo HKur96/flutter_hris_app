@@ -1,6 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/attendance_history_screen.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/clock_in_screen.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/clock_out_screen.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/employee/screens/today_attendance_screen.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:flutter_hris_app/modules/shift/presentation/screens/my_shift_schedule_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -225,17 +229,26 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
           const SizedBox(height: AppSpacing.space12),
 
           // Digital Live Clock & GPS Verification Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.space16,
-              vertical: AppSpacing.space12,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.canvas,
-              borderRadius: BorderRadius.circular(AppRadius.small),
-            ),
-            child: Column(
+          InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const TodayAttendanceScreen(),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(AppRadius.small),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.space16,
+                vertical: AppSpacing.space12,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.canvas,
+                borderRadius: BorderRadius.circular(AppRadius.small),
+              ),
+              child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -299,7 +312,8 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.space12),
+        ),
+        const SizedBox(height: AppSpacing.space12),
 
           // Primary Bottom Ergonomic Button (Thumb Tap)
           _buildActionButton(context),
@@ -402,11 +416,15 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
               fontWeight: FontWeight.w700,
             ),
           ),
-          onPressed: () {
-            setState(() {
-              _attendanceState = AttendanceCardState.working;
-            });
-            _showFeedback(context, 'Presensi Masuk Berhasil Tercatat');
+          onPressed: () async {
+            final res = await Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ClockInScreen()),
+            );
+            if (res == true && mounted) {
+              setState(() {
+                _attendanceState = AttendanceCardState.working;
+              });
+            }
           },
         ),
       );
@@ -427,20 +445,21 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
           ),
           icon: const Icon(Icons.logout_rounded, size: 18),
           label: Text(
-            'Check-Out Sekarang (Tersedia 15:00)',
+            'Check-Out Sekarang',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
           ),
-          onPressed: () {
-            setState(() {
-              _attendanceState = AttendanceCardState.completed;
-            });
-            _showFeedback(
-              context,
-              'Presensi Keluar Selesai. Selamat Beristirahat!',
+          onPressed: () async {
+            final res = await Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ClockOutScreen()),
             );
+            if (res == true && mounted) {
+              setState(() {
+                _attendanceState = AttendanceCardState.completed;
+              });
+            }
           },
         ),
       );
@@ -662,6 +681,13 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
                 dotColor: AppColors.primary,
                 text: 'Presensi Masuk Berhasil',
                 time: '06:55 WIB',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AttendanceHistoryScreen(),
+                    ),
+                  );
+                },
               ),
               const Divider(height: 1, color: AppColors.border),
               _buildActivityRow(
@@ -680,40 +706,45 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
     required Color dotColor,
     required String text,
     required String time,
+    VoidCallback? onTap,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.space12,
-        vertical: AppSpacing.space10,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: AppSpacing.space10),
-          Expanded(
-            child: Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: AppColors.textPrimary,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.small),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.space12,
+          vertical: AppSpacing.space10,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: AppSpacing.space10),
+            Expanded(
+              child: Text(
+                text,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          const SizedBox(width: AppSpacing.space8),
-          Text(
-            time,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              color: AppColors.textSecondary,
+            const SizedBox(width: AppSpacing.space8),
+            Text(
+              time,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

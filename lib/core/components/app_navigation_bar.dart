@@ -35,9 +35,9 @@ class AppBottomNavBar extends StatelessWidget {
 
   static const List<AppNavItem> employeeItems = [
     AppNavItem(
-      label: 'Presensi',
-      activeIcon: Icons.access_time_filled_rounded,
-      inactiveIcon: Icons.access_time_rounded,
+      label: 'Beranda',
+      activeIcon: Icons.dashboard_rounded,
+      inactiveIcon: Icons.dashboard_outlined,
     ),
     AppNavItem(
       label: 'Cuti & Izin',

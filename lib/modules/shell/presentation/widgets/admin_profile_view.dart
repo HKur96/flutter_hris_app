@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hris_app/core/components/app_shift_slider.dart';
 import 'package:flutter_hris_app/core/components/app_text_field.dart';
+import 'package:flutter_hris_app/core/components/components.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -44,12 +46,15 @@ class _AdminProfileViewState extends State<AdminProfileView> {
   static const Color _cErrorContainer = Color(0xFFFFDAD6);
   static const Color _cOnErrorContainer = Color(0xFF93000A);
 
-  Future<void> _handleSaveStoreName(String newStoreName) async {
+  Future<void> _handleSaveStoreSettings({
+    required String newStoreName,
+    required bool isShift,
+  }) async {
     final trimmed = newStoreName.trim();
     if (trimmed.isEmpty) return;
 
     final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.updateStoreName(trimmed);
+    final success = await authProvider.updateStoreName(trimmed, isShift: isShift);
 
     if (!mounted) return;
 
@@ -57,8 +62,8 @@ class _AdminProfileViewState extends State<AdminProfileView> {
       SnackBar(
         content: Text(
           success
-              ? 'Nama toko berhasil diperbarui menjadi "$trimmed"'
-              : (authProvider.errorMessage ?? 'Gagal memperbarui nama toko.'),
+              ? 'Pengaturan toko berhasil diperbarui'
+              : (authProvider.errorMessage ?? 'Gagal memperbarui pengaturan toko.'),
           style: GoogleFonts.inter(fontSize: 12.5),
         ),
         backgroundColor: success ? _cPrimaryContainer : const Color(0xFFBA1A1A),
@@ -263,8 +268,9 @@ class _AdminProfileViewState extends State<AdminProfileView> {
 
   /// Viewport 4: Bottom Sheet Ubah Nama Toko (PUT /api/v1/auth/store)
   void _showUpdateStoreBottomSheet(BuildContext context) {
-    final currentStore = context.read<AuthProvider>().user?.storeName ?? '';
-    final sheetController = TextEditingController(text: currentStore);
+    final user = context.read<AuthProvider>().user;
+    final sheetController = TextEditingController(text: user?.storeName);
+    final isShift = ValueNotifier(user?.isShift == true);
     final sheetFormKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -307,49 +313,13 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Ubah Nama Toko',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: _cOnSurface,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: _cPrimaryFixed,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  'PUT /auth/store',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: _cOnPrimaryFixed,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            'Nama toko akan diperbarui pada slip gaji & laporan.',
-                            style: GoogleFonts.inter(
-                              fontSize: 11.5,
-                              color: _cOnSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'Ubah Pengaturan Toko',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: _cOnSurface,
+                        ),
                       ),
                     ),
                     IconButton(
@@ -368,126 +338,11 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                   color: _cSurfaceContainer,
                 ),
 
-                // Field 1: Read-only Nama Toko Saat Ini
-                Text(
-                  'Nama Toko Saat Ini',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _cOnSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _cSurfaceContainerLow,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: _cSurfaceContainer),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          currentStore.isNotEmpty ? currentStore : '-',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: _cOnSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      const Icon(
-                        Icons.lock_outline_rounded,
-                        size: 16,
-                        color: _cOutline,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Field 2: Nama Toko Baru
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'Nama Toko Baru ',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _cOnSurface,
-                        ),
-                        children: const [
-                          TextSpan(
-                            text: '*',
-                            style: TextStyle(color: Color(0xFFBA1A1A)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${sheetController.text.length}/60',
-                      style: GoogleFonts.inter(fontSize: 11, color: _cOutline),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                TextFormField(
+                // Field 1: Nama Toko Baru
+                AppTextField(
                   controller: sheetController,
-                  maxLength: 60,
-                  buildCounter: (
-                    _, {
-                    required currentLength,
-                    required isFocused,
-                    maxLength,
-                  }) => null,
-                  decoration: InputDecoration(
-                    hintText: 'Masukkan nama entitas usaha',
-                    hintStyle: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: _cOutline,
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.storefront_rounded,
-                      size: 18,
-                      color: _cPrimaryContainer,
-                    ),
-                    suffixIcon: sheetController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(
-                              Icons.cancel_rounded,
-                              size: 18,
-                              color: _cOutline,
-                            ),
-                            onPressed: () {
-                              sheetController.clear();
-                              setSheetState(() {});
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: _cSurfaceContainer),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: _cPrimaryContainer,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
+                  label: 'Nama Toko',
+                  hintText: 'Masukkan nama entitas usaha',
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
                       return 'Nama toko tidak boleh kosong';
@@ -499,10 +354,29 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                   },
                   onChanged: (_) => setSheetState(() {}),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Maksimal 60 karakter.',
-                  style: GoogleFonts.inter(fontSize: 11, color: _cOutline),
+                const SizedBox(height: 14),
+                RichText(
+                  text: TextSpan(
+                    text: 'Sistem Shift',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ValueListenableBuilder<bool>(
+                  valueListenable: isShift,
+                  builder: (context, isShiftV, child) {
+                    return AppShiftSlider(
+                      value: isShiftV,
+                      onChanged: (v) {
+                        isShift.value = v;
+                        setSheetState(() {});
+                      },
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
 
@@ -535,7 +409,7 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                     Expanded(
                       child: SizedBox(
                         height: 46,
-                        child: ElevatedButton.icon(
+                        child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _cPrimaryContainer,
                             foregroundColor: Colors.white,
@@ -549,12 +423,15 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                               return;
                             }
                             final newName = sheetController.text.trim();
+                            final newIsShift = isShift.value;
                             Navigator.of(bottomSheetCtx).pop();
-                            await _handleSaveStoreName(newName);
+                            await _handleSaveStoreSettings(
+                              newStoreName: newName,
+                              isShift: newIsShift,
+                            );
                           },
-                          icon: const Icon(Icons.save_rounded, size: 18),
-                          label: Text(
-                            'Simpan Perubahan',
+                          child: Text(
+                            'Simpan',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -1003,7 +880,7 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                     color: _cSurfaceContainer,
                   ),
 
-                  // Row 2: Hak Akses Sistem
+                  // Row 2: Hak Akses
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -1016,7 +893,7 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hak Akses Sistem',
+                              'Hak Akses',
                               style: GoogleFonts.inter(
                                 fontSize: 11,
                                 color: _cOnSurfaceVariant,
@@ -1233,11 +1110,11 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                 const SizedBox(height: 16),
               ],
 
-              // Tempat Bekerja (Strict Read-Only Enforcement untuk Employee)
+              // INFORMASI PERUSAHAAN (Strict Read-Only Enforcement untuk Employee)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSectionHeader('TEMPAT BEKERJA'),
+                  _buildSectionHeader('INFORMASI PERUSAHAAN'),
                   Padding(
                     padding: const EdgeInsets.only(right: 4, bottom: 6),
                     child: Row(
@@ -1282,7 +1159,7 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Nama Toko / Badan Usaha',
+                            'Nama Perusahaan',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: _cOnSurfaceVariant,
@@ -1316,9 +1193,12 @@ class _AdminProfileViewState extends State<AdminProfileView> {
 
             // 4. Section Khusus OWNER & ADMIN: Informasi Perusahaan (Viewport 1 & 4)
             if (isOwner || isAdmin) ...[
-              _buildSectionHeader('INFORMASI PERUSAHAAN'),
+              _buildSectionHeader(
+                'INFORMASI PERUSAHAAN',
+                actionText: 'Ubah',
+                onTap: () => _showUpdateStoreBottomSheet(context),
+              ),
               Container(
-                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: _cCardBg,
                   borderRadius: BorderRadius.circular(16),
@@ -1331,15 +1211,58 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                     ),
                   ],
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
                   children: [
-                    Expanded(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Nama Perusahaan',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: _cOnSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  user?.storeName.isNotEmpty == true &&
+                                          user?.storeName != '-'
+                                      ? user!.storeName
+                                      : 'Nama Toko Belum Diatur',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _cOnSurface,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(height: 1, thickness: 1, color: _cSurfaceContainer),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Nama Toko / Perusahaan',
+                            'Sistem Shift',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: _cOnSurfaceVariant,
@@ -1347,10 +1270,7 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            user?.storeName.isNotEmpty == true &&
-                                    user?.storeName != '-'
-                                ? user!.storeName
-                                : 'Nama Toko Belum Diatur',
+                            user?.isShift == true ? 'Aktif' : 'Tidak Aktif',
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -1359,49 +1279,7 @@ class _AdminProfileViewState extends State<AdminProfileView> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Terhubung ke data operasional & slip gaji aktif',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: _cOutline,
-                            ),
-                          ),
                         ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Material(
-                      color: _cPrimaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () => _showUpdateStoreBottomSheet(context),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.edit_rounded,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Ubah',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                     ),
                   ],
@@ -1495,17 +1373,39 @@ class _AdminProfileViewState extends State<AdminProfileView> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(
+    String title, {
+    String? actionText,
+    Function()? onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 6),
-      child: Text(
-        title,
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.8,
-          color: _cOnSurfaceVariant,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
+              color: _cOnSurfaceVariant,
+            ),
+          ),
+          if (actionText != null && onTap != null) ...[
+            GestureDetector(
+              onTap: onTap,
+              child: Text(
+                actionText,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

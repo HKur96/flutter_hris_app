@@ -127,6 +127,61 @@ void main() {
       expect(find.textContaining('Sixbox Cabang Surabaya'), findsWidgets);
     });
 
+    testWidgets('Toggle AppShiftSlider di bottom sheet memperbarui isShift di AuthProvider dan UI',
+        (tester) async {
+      final fakeRepo = FakeAuthRepository();
+      fakeRepo.users['owner@karyahr.com'] = User(
+        id: 'owner-1',
+        name: 'Owner Utama',
+        employeeId: 'emp-owner',
+        email: 'owner@karyahr.com',
+        role: Role.owner,
+        isActive: true,
+        storeName: 'Sixbox Roastery',
+        isShift: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final authProvider = AuthProvider(repository: fakeRepo);
+      await authProvider.login('owner@karyahr.com', 'password');
+
+      await tester.pumpWidget(
+        createTestApp(
+          authProvider: authProvider,
+          child: const Scaffold(
+            body: AdminProfileView(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Pastikan status awal Aktif
+      expect(find.text('Aktif'), findsWidgets);
+
+      // Buka bottom sheet
+      await tester.ensureVisible(find.text('Ubah'));
+      await tester.tap(find.text('Ubah'));
+      await tester.pumpAndSettle();
+
+      // Verifikasi komponen slider hadir
+      expect(find.text('Sistem Shift'), findsWidgets);
+      expect(find.text('Non-Aktif'), findsOneWidget);
+
+      // Tap Non-Aktif pada slider
+      await tester.tap(find.text('Non-Aktif'));
+      await tester.pumpAndSettle();
+
+      // Simpan perubahan
+      await tester.ensureVisible(find.text('Simpan Perubahan'));
+      await tester.tap(find.text('Simpan Perubahan'));
+      await tester.pumpAndSettle();
+
+      // Verifikasi isShift menjadi false di provider dan UI menampilkan Tidak Aktif
+      expect(authProvider.user?.isShift, false);
+      expect(find.text('Tidak Aktif'), findsOneWidget);
+    });
+
     testWidgets(
         'Klik tombol logout memunculkan dialog konfirmasi destruktif mirip _showSoftDeleteDialog',
         (tester) async {

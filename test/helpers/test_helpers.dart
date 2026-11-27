@@ -10,8 +10,11 @@ import 'package:flutter_hris_app/core/config/base_exception.dart';
 import 'package:flutter_hris_app/core/config/enum.dart';
 import 'package:flutter_hris_app/core/config/global.dart';
 import 'package:flutter_hris_app/core/theme/app_theme.dart';
-import 'package:flutter_hris_app/modules/auth/domain/auth_repository.dart';
+import 'package:flutter_hris_app/modules/auth/domain/repository/auth_repository.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/setup_status.dart';
+import 'package:flutter_hris_app/modules/attendance/domain/entity/attendance.dart';
+import 'package:flutter_hris_app/modules/attendance/domain/repository/attendance_repository.dart';
+import 'package:flutter_hris_app/modules/attendance/presentation/provider/attendance_provider.dart';
 import 'package:flutter_hris_app/modules/auth/domain/entity/user.dart';
 import 'package:flutter_hris_app/modules/auth/presentation/provider/auth_provider.dart';
 import 'package:flutter_hris_app/modules/employee_management/domain/entity/employee_profile.dart';
@@ -24,11 +27,47 @@ import 'package:flutter_hris_app/modules/shift/domain/repository/shift_repositor
 import 'package:flutter_hris_app/modules/shift/presentation/provider/shift_assignment_provider.dart';
 import 'package:flutter_hris_app/modules/shift/presentation/provider/shift_provider.dart';
 
+import 'package:geolocator/geolocator.dart';
+// ignore: depend_on_referenced_packages
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
+
+class MockGeolocatorPlatform extends GeolocatorPlatform {
+  @override
+  Future<bool> isLocationServiceEnabled() async => true;
+
+  @override
+  Future<LocationPermission> checkPermission() async =>
+      LocationPermission.always;
+
+  @override
+  Future<LocationPermission> requestPermission() async =>
+      LocationPermission.always;
+
+  @override
+  Future<Position> getCurrentPosition({
+    LocationSettings? locationSettings,
+  }) async {
+    return Position(
+      longitude: 106.8456,
+      latitude: -6.2088,
+      timestamp: DateTime.now(),
+      accuracy: 5.0,
+      altitude: 10.0,
+      altitudeAccuracy: 1.0,
+      heading: 0.0,
+      headingAccuracy: 1.0,
+      speed: 0.0,
+      speedAccuracy: 1.0,
+    );
+  }
+}
+
 /// Konfigurasi global pengujian: Nonaktifkan runtime font network fetch & inisialisasi secure storage mock
 void setupTestEnvironment() {
   TestWidgetsFlutterBinding.ensureInitialized();
   FlutterSecureStorage.setMockInitialValues({});
   GoogleFonts.config.allowRuntimeFetching = false;
+  GeolocatorPlatform.instance = MockGeolocatorPlatform();
 }
 
 // =============================================================================
@@ -116,12 +155,18 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<BaseException, String>> updateStoreName(String storeName) async {
+  Future<Either<BaseException, String>> updateStoreName(
+    String storeName, {
+    bool? isShift,
+  }) async {
     if (shouldFail) return Left(NetworkException(failMessage));
-    // Perbarui storeName pada user yang aktif jika ada
+    // Perbarui storeName & isShift pada user yang aktif jika ada
     if (users.isNotEmpty) {
       final firstKey = users.keys.first;
-      users[firstKey] = users[firstKey]!.copyWith(storeName: storeName);
+      users[firstKey] = users[firstKey]!.copyWith(
+        storeName: storeName,
+        isShift: isShift ?? users[firstKey]!.isShift,
+      );
     }
     return Right(storeName);
   }
@@ -649,6 +694,187 @@ class FakeShiftAssignmentRepository implements ShiftAssignmentRepository {
   }
 }
 
+/// Fake Attendance Repository
+class FakeAttendanceRepository implements AttendanceRepository {
+  Attendance? todayAttendance;
+  List<Attendance> attendanceList = [];
+  bool shouldFail = false;
+  String failMessage = 'Terjadi kesalahan presensi';
+
+  FakeAttendanceRepository({
+    this.todayAttendance,
+    List<Attendance>? initialList,
+  }) : attendanceList = initialList ?? [];
+
+  @override
+  Future<Either<BaseException, Attendance?>> getTodayAttendance() async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    return Right(todayAttendance);
+  }
+
+  @override
+  Future<Either<BaseException, Attendance>> checkIn({
+    required double lat,
+    required double lng,
+    bool? isMockLocation,
+    bool? rejectMock,
+    String? notes,
+  }) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    final att = Attendance(
+      id: 'att-today',
+      employeeId: 'emp-1',
+      workDate: DateTime.now(),
+      shiftId: 'shift-1',
+      checkIn: DateTime.now(),
+      checkOut: null,
+      checkInLat: lat,
+      checkInLng: lng,
+      checkOutLat: null,
+      checkOutLng: null,
+      status: 'PRESENT',
+      notes: notes,
+      employeeName: 'Budi Santoso',
+      employeeNik: '3201234567890001',
+      shiftName: 'Shift Pagi',
+      shiftStartTime: '08:00',
+      shiftEndTime: '17:00',
+      durationMinutes: null,
+    );
+    todayAttendance = att;
+    return Right(att);
+  }
+
+  @override
+  Future<Either<BaseException, Attendance>> checkOut({
+    required double lat,
+    required double lng,
+    String? notes,
+  }) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    final att = Attendance(
+      id: todayAttendance?.id ?? 'att-today',
+      employeeId: todayAttendance?.employeeId ?? 'emp-1',
+      workDate: todayAttendance?.workDate ?? DateTime.now(),
+      shiftId: todayAttendance?.shiftId ?? 'shift-1',
+      checkIn:
+          todayAttendance?.checkIn ??
+          DateTime.now().subtract(const Duration(hours: 8)),
+      checkOut: DateTime.now(),
+      checkInLat: todayAttendance?.checkInLat ?? lat,
+      checkInLng: todayAttendance?.checkInLng ?? lng,
+      checkOutLat: lat,
+      checkOutLng: lng,
+      status: todayAttendance?.status ?? 'PRESENT',
+      notes: notes,
+      employeeName: todayAttendance?.employeeName ?? 'Budi Santoso',
+      employeeNik: todayAttendance?.employeeNik ?? '3201234567890001',
+      shiftName: todayAttendance?.shiftName ?? 'Shift Pagi',
+      shiftStartTime: todayAttendance?.shiftStartTime ?? '08:00',
+      shiftEndTime: todayAttendance?.shiftEndTime ?? '17:00',
+      durationMinutes: 480,
+    );
+    todayAttendance = att;
+    return Right(att);
+  }
+
+  @override
+  Future<Either<BaseException, List<Attendance>>> getAttendanceList({
+    String? employeeId,
+    String? shiftId,
+    String? status,
+    String? startDate,
+    String? endDate,
+    int? limit,
+    int? offset,
+  }) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    return Right(attendanceList);
+  }
+
+  @override
+  Future<Either<BaseException, Attendance>> getAttendanceDetail(
+    String id,
+  ) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    final match = attendanceList.where((a) => a.id == id).firstOrNull;
+    if (match != null) return Right(match);
+    if (todayAttendance != null && todayAttendance!.id == id) {
+      return Right(todayAttendance!);
+    }
+    return Left(DataException('Detail presensi tidak ditemukan'));
+  }
+
+  @override
+  Future<Either<BaseException, Attendance>> createManualAttendance({
+    required String employeeId,
+    required String workDate,
+    required String shiftId,
+    required String status,
+    required String notes,
+  }) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    final att = Attendance(
+      id: 'att-manual-${DateTime.now().millisecondsSinceEpoch}',
+      employeeId: employeeId,
+      workDate: DateTime.tryParse(workDate) ?? DateTime.now(),
+      shiftId: shiftId,
+      checkIn: null,
+      checkOut: null,
+      checkInLat: null,
+      checkInLng: null,
+      checkOutLat: null,
+      checkOutLng: null,
+      status: status,
+      notes: notes,
+      employeeName: 'Karyawan Uji',
+      employeeNik: '320100000000',
+      shiftName: 'Shift Terkait',
+      shiftStartTime: '08:00',
+      shiftEndTime: '17:00',
+      durationMinutes: null,
+    );
+    attendanceList.add(att);
+    return Right(att);
+  }
+
+  @override
+  Future<Either<BaseException, Attendance>> adjustAttendance({
+    required String id,
+    required String status,
+    required String notes,
+  }) async {
+    if (shouldFail) return Left(NetworkException(failMessage));
+    final index = attendanceList.indexWhere((a) => a.id == id);
+    if (index != -1) {
+      final old = attendanceList[index];
+      final updated = Attendance(
+        id: old.id,
+        employeeId: old.employeeId,
+        workDate: old.workDate,
+        shiftId: old.shiftId,
+        checkIn: old.checkIn,
+        checkOut: old.checkOut,
+        checkInLat: old.checkInLat,
+        checkInLng: old.checkInLng,
+        checkOutLat: old.checkOutLat,
+        checkOutLng: old.checkOutLng,
+        status: status,
+        notes: notes,
+        employeeName: old.employeeName,
+        employeeNik: old.employeeNik,
+        shiftName: old.shiftName,
+        shiftStartTime: old.shiftStartTime,
+        shiftEndTime: old.shiftEndTime,
+        durationMinutes: old.durationMinutes,
+      );
+      attendanceList[index] = updated;
+      return Right(updated);
+    }
+    return Left(DataException('Data tidak ditemukan'));
+  }
+}
+
 // =============================================================================
 // TEST APP WRAPPER BUILDER
 // =============================================================================
@@ -659,6 +885,7 @@ Widget createTestApp({
   EmployeeManagementProvider? empProvider,
   ShiftProvider? shiftProvider,
   ShiftAssignmentProvider? asgProvider,
+  AttendanceProvider? attendanceProvider,
   Map<String, WidgetBuilder>? routes,
   Size screenSize = const Size(390, 844),
 }) {
@@ -694,6 +921,16 @@ Widget createTestApp({
         ChangeNotifierProvider(
           create: (_) => ShiftAssignmentProvider(
             repository: FakeShiftAssignmentRepository(),
+          ),
+        ),
+      if (attendanceProvider != null)
+        ChangeNotifierProvider<AttendanceProvider>.value(
+          value: attendanceProvider,
+        )
+      else
+        ChangeNotifierProvider(
+          create: (_) => AttendanceProvider(
+            repository: FakeAttendanceRepository(),
           ),
         ),
     ],

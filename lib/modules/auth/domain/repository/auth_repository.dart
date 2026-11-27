@@ -16,7 +16,10 @@ abstract class AuthRepository {
     String password,
   );
 
-  Future<Either<BaseException, String>> updateStoreName(String storeName);
+  Future<Either<BaseException, String>> updateStoreSettings(
+    String storeName, {
+    bool? isShift,
+  });
 
   Future<Either<BaseException, bool>> changePassword({
     required String oldPassword,
